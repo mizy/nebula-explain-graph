@@ -1,0 +1,103 @@
+.vesoftExplainGraph {
+  border: 1px solid #ccc;
+
+  .gql {
+    display: flex;
+    height: 46px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 0 10px;
+    border-bottom: 1px solid #e8e8e8;
+
+    .copyButton {
+      width: 30px;
+      height: 30px;
+      border-radius: 6px;
+      background-color: #F4F4F5;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      cursor: pointer;
+    }
+  }
+
+  .graphWrapper {
+    height: 650px;
+
+    :global {
+      .ve-node-shape:focus {
+        outline: none;
+      }
+    }
+
+    .explainNode {
+      border-radius: 10px;
+      font-size: 8px;
+
+      .header {
+        height: 46px;
+        display: flex;
+        align-items: center;
+        padding: 0 20px;
+        background-color: #576272;
+        border-top-left-radius: 20px;
+        border-top-right-radius: 20px;
+        font-size: 16px;
+        font-weight: 400;
+        color: #fff;
+      }
+
+      .body {
+        list-style: none;
+        padding: 0;
+        margin: 0;
+
+        li {
+          height: 36px;
+          padding: 0 20px;
+          align-items: center;
+          line-height: 36px;
+          border-bottom: 1px solid #D5DDEB;
+          color: #000;
+          overflow: hidden;
+          text-overflow: ellipsis;
+          white-space: nowrap;
+
+          .label {
+            color: #8697B0;
+            display: inline-block;
+            width: 80px;
+            flex-shrink: 0;
+          }
+
+          .ouputLabel {}
+
+          .ouputVal {
+            color: #0091FF;
+            margin-right: 10px;
+          }
+        }
+
+        li:last-child {
+          border-bottom: none;
+        }
+      }
+    }
+
+    //Select, Loop,PassThrough, Start each has different color
+    .explainNode[data-name=Start],
+    .explainNode[data-name=PassThrough],
+    .explainNode[data-name=Select] {
+      .header {
+        background-color: #78B7F2;
+      }
+    }
+
+    .explainNode[data-name=Loop] {
+      .header {
+        background-color: #40C3AB;
+      }
+    }
+  }
+}

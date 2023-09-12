@@ -1,0 +1,8 @@
+.card {
+  margin: 0 auto; /* Added */
+  display: flex;
+  gap: 20px;
+  margin-bottom: 20px;
+}
+body {
+}
