@@ -1,6 +1,6 @@
 {
   "name": "@vesoft-inc/nebula-explain-graph",
-  "version": "1.0.0-beta.0",
+  "version": "1.0.0-beta.2",
   "type": "module",
   "scripts": {
     "dev": "vite",
@@ -13,6 +13,7 @@
     "dist",
     "types"
   ],
+  "main": "dist/index.js",
   "types": "types/Explain.d.ts",
   "dependencies": {
     "@vesoft-inc/veditor": "4.4.6-beta.1",
