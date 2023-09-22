@@ -1,18 +1,19 @@
 {
-  "name": "nebula-explain-graph",
-  "private": true,
-  "version": "0.0.0",
+  "name": "@vesoft-inc/nebula-explain-graph",
+  "version": "1.0.0-beta.0",
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "tsc && vite build",
+    "build": "tsc && vite build --config vite.config.build.ts && npm run build:types",
     "lint": "eslint . --ext ts,tsx --report-unused-disable-directives --max-warnings 0",
+    "build:types": " tsc --noEmit false --declaration true  --emitDeclarationOnly --outDir types",
     "preview": "vite preview"
   },
+  "types": "types/Explain.d.ts",
   "dependencies": {
-    "copy-to-clipboard": "^3.3.3",
-    "@vesoft-inc/veditor": "^4.4.6",
+    "@vesoft-inc/veditor": "4.4.6-beta.1",
     "antd": "^5.9.0",
+    "copy-to-clipboard": "^3.3.3",
     "react": "^18.2.0",
     "react-dom": "^18.2.0"
   },
@@ -33,5 +34,10 @@
     "less": "^4.2.0",
     "typescript": "^5.0.2",
     "vite": "^4.4.5"
+  },
+  "sideEffects": {
+    "include": [
+      "dst/**/*.css"
+    ]
   }
 }

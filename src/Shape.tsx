@@ -8,10 +8,15 @@ import { InstanceNode } from "@vesoft-inc/veditor/types/Shape/Node";
 import { Utils } from "@vesoft-inc/veditor";
 import ReactDOM from "react-dom";
 import styles from "./Explain.module.less";
+import { InstanceLine } from "@vesoft-inc/veditor/types/Shape/Line";
+import { AnyMap } from "@vesoft-inc/veditor/types/Utils";
+import { mat2d } from "gl-matrix";
+
 export type ExplainProfile = {
   rows: number;
   execDurationInUs: number;
   totalDurationInUs: number;
+  [key: string]: any;
 };
 
 export type ExplainOutput =
@@ -42,6 +47,8 @@ class ExplainPlugin {
   editor: VEditor;
   config: ExplainConfig;
   data?: VEditorData;
+  totalTime = 0;
+  totalRows = 0;
 
   constructor(editor: VEditor, config?: ExplainConfig) {
     this.editor = editor;
@@ -62,9 +69,9 @@ class ExplainPlugin {
     this.editor.config.dagreOption = {
       rankdir: "BT",
       ranker: "tight-tree",
-      ranksep: 100,
+      ranksep: 200,
     };
-    this.editor.schema.format();
+    await this.editor.schema.format();
     this.editor.controller.autoScale();
     this.editor.controller.autoFit();
   }
@@ -74,10 +81,12 @@ class ExplainPlugin {
       nodes: [],
       lines: [],
     };
+    let totalTime = 0;
+    let totalRows = 0;
     data.forEach((item) => {
       const node: VEditorNode = {
         uuid: item.id.toString(),
-        name: item.name,
+        name: item.name + "_" + item.id,
         x: 0,
         y: 0,
         type: "explainNode",
@@ -85,6 +94,8 @@ class ExplainPlugin {
           ...item,
         },
       };
+      totalTime += (item.profiles?.[0] as ExplainProfile).totalDurationInUs;
+      totalRows += (item.profiles?.[0] as ExplainProfile).rows;
       res.nodes.push(node);
       item.dependencies?.forEach((id) => {
         const line: VEditorLine = {
@@ -95,15 +106,20 @@ class ExplainPlugin {
           type: "explainLine",
           data: {
             description: item.description,
+            rows: (item.profiles?.[0] as ExplainProfile).rows,
           },
         };
         res.lines.push(line);
       });
     });
+    this.totalRows = totalRows;
+    this.totalTime = totalTime;
     return res;
   }
 
   registerShape() {
+    const shapeWidth = 450;
+    const shapeHeight = 160;
     this.editor.graph.node.registeNode(
       "explainNode",
       {
@@ -117,13 +133,18 @@ class ExplainPlugin {
             <>
               <rect
                 filter="url(#ve-black-shadow)"
-                width={540}
-                height={160}
+                width={shapeWidth}
+                height={shapeHeight}
                 rx={20}
                 ry={20}
                 fill="#fff"
               />
-              <foreignObject width={540} height={160} x={0} y={0}>
+              <foreignObject
+                width={shapeWidth}
+                height={shapeHeight}
+                x={0}
+                y={0}
+              >
                 {this.renderNode(data)}
               </foreignObject>
             </>,
@@ -134,12 +155,106 @@ class ExplainPlugin {
       },
       "domNode"
     );
+    // eslint-disable-next-line @typescript-eslint/no-this-alias
+    const self = this;
     // extend the polyline
-    this.editor.graph.line.registeLine("explainLine", {}, "polyline");
+    this.editor.graph.line.registeLine(
+      "explainLine",
+      {
+        render(line: InstanceLine) {
+          const { from, to, data } = line;
+          // save the size to data for later compute
+          (data.data as AnyMap).width =
+            ((data.data?.rows as number) / self.totalRows) * 100 + 5;
+          const base = (data.data?.width as number) || 10;
+          const width = Math.min(base * 2.5, base + 40);
+          const height = Math.min(width * 0.8, 30);
+          (data.data as AnyMap).arrowHeight = height;
+          (data.data as AnyMap).arrowWidth = width;
+          this.endSpace = height;
+          data.label = self.renderSplitNum(data.data?.rows as number) + " rows";
+
+          const pathString = (this as any).makePath(from, to, line);
+          const shape = line.shape ? line.shape : Utils.SVGHelper.group();
+          line.shape = shape;
+          const path = line.path
+            ? line.path
+            : (line.path = Utils.SVGHelper.path());
+          const shadowPath = line.shadowPath
+            ? line.shadowPath
+            : (line.shadowPath = Utils.SVGHelper.path());
+          Utils.dom.setAttrs(path, {
+            d: pathString,
+            class: "ve-line-path",
+            "stroke-dasharray": "10",
+            fill: "none",
+            "stroke-width": data.data?.width,
+            "pointer-events": "visiblepainted",
+            stroke: "#86C5FF",
+            ...((data.style as AnyMap) || {}),
+          });
+          Utils.dom.setAttrs(shadowPath, {
+            d: pathString,
+            stroke: "transparent",
+            fill: "none",
+            "pointer-events": "visiblestroke",
+          });
+          line.pathData = new Utils.Path(pathString);
+          shadowPath.setAttribute("class", "ve-shdow-path");
+          Utils.dom.animate(
+            10,
+            0,
+            (val) =>
+              Utils.dom.setAttrs(path, {
+                "stroke-dasharray": `${val}`,
+              }),
+            300
+          );
+          shape.appendChild(shadowPath);
+          shape.appendChild(path);
+          this.renderLabel && this.renderLabel(line);
+          return shape;
+        },
+        renderArrow(line?: InstanceLine) {
+          if (!line) {
+            return Utils.SVGHelper.path();
+          }
+          const { to, data } = line;
+          const width = (data.data?.arrowWidth as number) || 10;
+          const height = (data.data?.arrowHeight as number) || 10;
+          const angle = (this as any).getPointAngle(to);
+          const pathString = `M${0} ${0}L${height} ${width / 2}L${height} ${
+            -width / 2
+          }Z`;
+          const path = line.arrow ? line.arrow : Utils.SVGHelper.path();
+          // 进行角度的中心变换
+          const matrix = mat2d.create();
+          mat2d.translate(matrix, matrix, [to.x, to.y]);
+          mat2d.rotate(matrix, matrix, angle);
+          Utils.dom.setAttrs(path, {
+            class: "ve-line-arrow",
+            d: pathString,
+            fill: "#86C5FF",
+            transform: `matrix(${matrix.join(",")})`,
+            ...(line.data.arrowStyle as AnyMap),
+          });
+          return path;
+        },
+      },
+      "polyline"
+    );
+    this.initShadowFilter(this.editor.svg!);
   }
 
   renderNode(data: VEditorNode) {
-    const { description, profiles, outputVar } = data.data as ExplainNode;
+    const { description, profiles = [], outputVar } = data.data as ExplainNode;
+    const progress =
+      ((profiles[0] as ExplainProfile).totalDurationInUs / this.totalTime) *
+      100;
+    const green = [14, 188, 156];
+    const red = [235, 87, 87];
+    const yellow = [242, 201, 76];
+    const color = progress < 50 ? green : progress < 80 ? yellow : red;
     return (
       <div className={styles.explainNode} data-name={data.name}>
         <div className={styles.header}>
@@ -155,13 +270,23 @@ class ExplainPlugin {
             <span>{description?.[0].inputVar}</span>
           </li>
           {profiles ? (
-            <li>
+            <li className={styles.totalTime}>
               <span className={styles.label}>totalTime:</span>
               <span>
                 {this.renderSplitNum(
                   (profiles[0] as ExplainProfile).totalDurationInUs
                 )}{" "}
                 us
+              </span>
+              <span className={styles.progress}>
+                <span
+                  style={{
+                    width: `${Math.max(progress, 1)}%`,
+                    backgroundImage: `linear-gradient(to right, rgb(14, 188, 156), rgb(${color.join(
+                      ","
+                    )})`,
+                  }}
+                ></span>
               </span>
             </li>
           ) : null}
@@ -213,5 +338,28 @@ class ExplainPlugin {
     this.caches[data.uuid] = Utils.dom.getDOMRect(dom);
     return this.caches[data.uuid];
   }
+
+  initShadowFilter = (svg: SVGElement) => {
+    const filter = document.createElementNS("http://www.w3.org/2000/svg", "g");
+    ReactDOM.render(
+      <>
+        <filter id="ve-blue-shadow" filterUnits="userSpaceOnUse">
+          <feGaussianBlur in="SourceAlpha" stdDeviation="6" />
+          <feOffset dx="0" dy="1" result="offsetblur" />
+          <feFlood floodColor="#0091ff" />
+          <feComposite in2="offsetblur" operator="in" />
+          <feComponentTransfer>
+            <feFuncA type="linear" slope="1" />
+          </feComponentTransfer>
+          <feMerge>
+            <feMergeNode />
+            <feMergeNode in="SourceGraphic" />
+          </feMerge>
+        </filter>
+      </>,
+      filter
+    );
+    svg.querySelector("defs")?.appendChild(filter);
+  };
 }
 export default ExplainPlugin;

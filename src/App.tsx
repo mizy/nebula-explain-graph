@@ -258,7 +258,7 @@ function App() {
         <br />
       </div>
       <Explain
-        style={{ width: 800 }}
+        style={{ width: 1000, height: 800 }}
         data={testData}
         gql="PROFILE match (v:monster)-[e]-(v1:monster) return v,e,v1;"
       />
