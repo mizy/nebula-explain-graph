@@ -1,11 +1,10 @@
-import VEditor from "@vesoft-inc/veditor";
 import {
   VEditorData,
   VEditorNode,
   VEditorLine,
 } from "@vesoft-inc/veditor/types/Model/Schema";
 import { InstanceNode } from "@vesoft-inc/veditor/types/Shape/Node";
-import { Utils } from "@vesoft-inc/veditor";
+import { Utils,VEditor } from "@vesoft-inc/veditor";
 import ReactDOM from "react-dom";
 import styles from "./Explain.module.less";
 import { InstanceLine } from "@vesoft-inc/veditor/types/Shape/Line";
@@ -307,8 +306,8 @@ class ExplainPlugin {
     // render each key of data
     for (const key in data) {
       res.push(
-        <span className={styles.ouputLabel}>{key}:</span>,
-        <span className={styles.ouputVal}> {JSON.stringify(data[key])}</span>
+        <span key={key} className={styles.ouputLabel}>{key}:</span>,
+        <span key={key+'val'} className={styles.ouputVal}> {JSON.stringify(data[key])}</span>
       );
     }
     return res;

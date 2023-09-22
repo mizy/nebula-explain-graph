@@ -11,14 +11,14 @@ export default defineConfig({
       name: 'explain',
       // the proper extensions will be added
       fileName: 'index',
-      formats:["es"],
+      formats: ["umd", "es"],
     },
     rollupOptions: {
       // make sure to externalize deps that shouldn't be bundled
       // into your library
       external: ['react','react-dom','antd','@vesoft-inc/veditor','copy-to-clipboard'],
       output: {
-        intro: 'import "./Explain.css";',
+        // intro: 'import "./Explain.css";',
       },
     },
     cssCodeSplit: true,

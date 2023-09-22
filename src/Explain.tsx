@@ -1,4 +1,4 @@
-import VEditor from "@vesoft-inc/veditor";
+import { VEditor } from "@vesoft-inc/veditor";
 import styles from "./Explain.module.less";
 import { useCallback, useEffect, useRef, useState } from "react";
 import ExplainPlugin, { ExplainData, ExplainNode } from "./Shape";
@@ -146,7 +146,9 @@ function Explain(props: ExplainProps) {
           </div>
         </div>
       )}
-      <div className={styles.explainGraph}>
+      <div className={styles.explainGraph} style={{
+        height: props.gql ? "calc(100% - 40px)" : "100%"
+      }}>
         <div className={styles.graphArea}>
           <div className={styles.graphWrapper} ref={domRef}></div>
           <div className={styles.buttonArea}>

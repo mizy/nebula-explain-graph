@@ -1,5 +1,5 @@
-import VEditor from "@vesoft-inc/veditor";
 import { VEditorData, VEditorNode } from "@vesoft-inc/veditor/types/Model/Schema";
+import { VEditor } from "@vesoft-inc/veditor";
 export type ExplainProfile = {
     rows: number;
     execDurationInUs: number;
