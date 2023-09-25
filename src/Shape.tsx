@@ -4,7 +4,7 @@ import {
   VEditorLine,
 } from "@vesoft-inc/veditor/types/Model/Schema";
 import { InstanceNode } from "@vesoft-inc/veditor/types/Shape/Node";
-import { Utils,VEditor } from "@vesoft-inc/veditor";
+import { Utils, VEditor } from "@vesoft-inc/veditor";
 import ReactDOM from "react-dom";
 import styles from "./Explain.module.less";
 import { InstanceLine } from "@vesoft-inc/veditor/types/Shape/Line";
@@ -13,8 +13,8 @@ import { mat2d } from "gl-matrix";
 
 export type ExplainProfile = {
   rows: number;
-  execDurationInUs: number;
-  totalDurationInUs: number;
+  execTime: number;
+  totalTime: number;
   [key: string]: any;
 };
 
@@ -26,21 +26,24 @@ export type ExplainOutput =
     }
   | string;
 
-export type ExplainDescription = Record<string, any>[];
+export type ExplainOperator = {
+  outputVar?: ExplainOutput;
+  [key: string]: any;
+};
 
 export type ExplainNode = {
   id: number;
   name: string;
-  profiles?: ExplainProfile[];
-  outputVar: ExplainOutput;
+  profilingData: ExplainProfile;
+  operatorInfo: ExplainOperator;
   dependencies?: number[];
-  description?: ExplainDescription;
 };
 
 export type ExplainData = ExplainNode[];
 
 export type ExplainConfig = {
   data?: ExplainData;
+  type?: "explain" | "profile";
 };
 class ExplainPlugin {
   editor: VEditor;
@@ -68,7 +71,7 @@ class ExplainPlugin {
     this.editor.config.dagreOption = {
       rankdir: "BT",
       ranker: "tight-tree",
-      ranksep: 200,
+      ranksep: this.config.type === "explain" ? 100 : 200,
     };
     await this.editor.schema.format();
     this.editor.controller.autoScale();
@@ -93,8 +96,8 @@ class ExplainPlugin {
           ...item,
         },
       };
-      totalTime += (item.profiles?.[0] as ExplainProfile).totalDurationInUs;
-      totalRows += (item.profiles?.[0] as ExplainProfile).rows;
+      totalTime += item.profilingData?.totalTime || 0;
+      totalRows += item.profilingData?.rows || 0;
       res.nodes.push(node);
       item.dependencies?.forEach((id) => {
         const line: VEditorLine = {
@@ -104,8 +107,7 @@ class ExplainPlugin {
           toPoint: 3,
           type: "explainLine",
           data: {
-            description: item.description,
-            rows: (item.profiles?.[0] as ExplainProfile).rows,
+            rows: item.profilingData.rows,
           },
         };
         res.lines.push(line);
@@ -118,7 +120,7 @@ class ExplainPlugin {
 
   registerShape() {
     const shapeWidth = 450;
-    const shapeHeight = 160;
+    const shapeHeight = this.config.type === "explain" ? 120 : 160;
     this.editor.graph.node.registeNode(
       "explainNode",
       {
@@ -162,16 +164,21 @@ class ExplainPlugin {
       {
         render(line: InstanceLine) {
           const { from, to, data } = line;
-          // save the size to data for later compute
-          (data.data as AnyMap).width =
-            ((data.data?.rows as number) / self.totalRows) * 100 + 5;
-          const base = (data.data?.width as number) || 10;
-          const width = Math.min(base * 2.5, base + 40);
-          const height = Math.min(width * 0.8, 30);
-          (data.data as AnyMap).arrowHeight = height;
-          (data.data as AnyMap).arrowWidth = width;
-          this.endSpace = height;
-          data.label = self.renderSplitNum(data.data?.rows as number) + " rows";
+          if (self.config.type !== "explain") {
+            if (data.data?.rows !== undefined) {
+              data.label =
+                self.renderSplitNum(data.data?.rows as number) + " rows";
+            }
+            // save the size to data for later compute
+            (data.data as AnyMap).width =
+              ((data.data?.rows as number) / self.totalRows) * 100 + 5;
+            const base = (data.data?.width as number) || 10;
+            const width = Math.min(base * 2.5, base + 40);
+            const height = Math.min(width * 0.8, 30);
+            (data.data as AnyMap).arrowHeight = height;
+            (data.data as AnyMap).arrowWidth = width;
+            this.endSpace = height;
+          }
 
           const pathString = (this as any).makePath(from, to, line);
           const shape = line.shape ? line.shape : Utils.SVGHelper.group();
@@ -187,7 +194,7 @@ class ExplainPlugin {
             class: "ve-line-path",
             "stroke-dasharray": "10",
             fill: "none",
-            "stroke-width": data.data?.width,
+            "stroke-width": data.data?.width || 5,
             "pointer-events": "visiblepainted",
             stroke: "#86C5FF",
             ...((data.style as AnyMap) || {}),
@@ -245,11 +252,9 @@ class ExplainPlugin {
     this.initShadowFilter(this.editor.svg!);
   }
 
-  renderNode(data: VEditorNode) {
-    const { description, profiles = [], outputVar } = data.data as ExplainNode;
-    const progress =
-      ((profiles[0] as ExplainProfile).totalDurationInUs / this.totalTime) *
-      100;
+  renderNode = (data: VEditorNode) => {
+    const { profilingData, operatorInfo } = data.data as ExplainNode;
+    const progress = (profilingData?.totalTime / this.totalTime) * 100;
     const green = [14, 188, 156];
     const red = [235, 87, 87];
     const yellow = [242, 201, 76];
@@ -262,21 +267,16 @@ class ExplainPlugin {
         <ul className={styles.body}>
           <li>
             <span className={styles.label}>outputVar:</span>
-            {this.renderOutputVar(outputVar)}
+            {this.renderOutputVar(operatorInfo?.outputVar)}
           </li>
           <li>
             <span className={styles.label}>inputVar:</span>
-            <span>{description?.[0].inputVar}</span>
+            <span>{operatorInfo?.inputVar}</span>
           </li>
-          {profiles ? (
+          {profilingData && this.config.type === "profile" ? (
             <li className={styles.totalTime}>
               <span className={styles.label}>totalTime:</span>
-              <span>
-                {this.renderSplitNum(
-                  (profiles[0] as ExplainProfile).totalDurationInUs
-                )}{" "}
-                us
-              </span>
+              <span>{this.renderSplitNum(profilingData.totalTime)} us</span>
               <span className={styles.progress}>
                 <span
                   style={{
@@ -292,7 +292,7 @@ class ExplainPlugin {
         </ul>
       </div>
     );
-  }
+  };
 
   renderOutputVar(data: any) {
     if (typeof data === "string") {
@@ -306,8 +306,13 @@ class ExplainPlugin {
     // render each key of data
     for (const key in data) {
       res.push(
-        <span key={key} className={styles.ouputLabel}>{key}:</span>,
-        <span key={key+'val'} className={styles.ouputVal}> {JSON.stringify(data[key])}</span>
+        <span key={key} className={styles.ouputLabel}>
+          {key}:
+        </span>,
+        <span key={key + "val"} className={styles.ouputVal}>
+          {" "}
+          {JSON.stringify(data[key])}
+        </span>
       );
     }
     return res;

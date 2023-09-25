@@ -1,7 +1,11 @@
 import { VEditor } from "@vesoft-inc/veditor";
 import styles from "./Explain.module.less";
 import { useCallback, useEffect, useRef, useState } from "react";
-import ExplainPlugin, { ExplainData, ExplainNode } from "./Shape";
+import ExplainPlugin, {
+  ExplainData,
+  ExplainNode,
+  ExplainOperator,
+} from "./Shape";
 import NgqlRender from "./GQL";
 import copySVG from "./assets/copy.svg";
 import plusSVG from "./assets/plus.svg";
@@ -9,6 +13,7 @@ import minusSVG from "./assets/minus.svg";
 import sortSVG from "./assets/sort.svg";
 import copy from "copy-to-clipboard";
 import { Button, message } from "antd";
+import React from "react";
 const updatePanAnimation = (editor: VEditor) => {
   setTimeout(() => {
     editor.controller.autoScale();
@@ -20,9 +25,10 @@ export interface ExplainProps {
   gql?: string;
   data?: ExplainData;
   detailWidth?: number;
+  type?: "explain" | "profile";
 }
 function Explain(props: ExplainProps) {
-  const { detailWidth = 400 } = props;
+  const { detailWidth = 400, type = "profile" } = props;
   const editorRef = useRef<VEditor>();
   const explainPluginRef = useRef<ExplainPlugin>();
   const domRef = useRef<HTMLDivElement>(null);
@@ -35,6 +41,7 @@ function Explain(props: ExplainProps) {
     });
     editorRef.current = editor;
     explainPluginRef.current = new ExplainPlugin(editor, {
+      type,
       data: props.data,
     });
     editor.graph.on("node:click", ({ node }: any) => {
@@ -146,9 +153,12 @@ function Explain(props: ExplainProps) {
           </div>
         </div>
       )}
-      <div className={styles.explainGraph} style={{
-        height: props.gql ? "calc(100% - 40px)" : "100%"
-      }}>
+      <div
+        className={styles.explainGraph}
+        style={{
+          height: props.gql ? "calc(100% - 40px)" : "100%",
+        }}
+      >
         <div className={styles.graphArea}>
           <div className={styles.graphWrapper} ref={domRef}></div>
           <div className={styles.buttonArea}>
@@ -173,40 +183,32 @@ function Explain(props: ExplainProps) {
             <div className={styles.detailTitle}>{activeNode?.name}</div>
             <div className={styles.detailPTitle}>Profiling data</div>
             <div className={styles.detailInfo}>
-              {activeNode?.profiles?.map((profile) => {
-                return Object.keys(profile).map((key) => {
-                  return (
-                    <>
-                      <span title={key} className={styles.detailLabel}>
-                        {key}:
-                      </span>
-                      <pre className={styles.detailValue}>
-                        {renderVal(profile[key])}
-                      </pre>
-                    </>
-                  );
-                });
+              {Object.keys(activeNode?.profilingData || {}).map((key) => {
+                return (
+                  <React.Fragment key={key}>
+                    <span key={key} title={key} className={styles.detailLabel}>
+                      {key}:
+                    </span>
+                    <pre key={key + "val"} className={styles.detailValue}>
+                      {renderVal(activeNode?.profilingData?.[key])}
+                    </pre>
+                  </React.Fragment>
+                );
               })}
             </div>
             <div className={styles.detailPTitle}>Operator info</div>
             <div className={styles.detailInfo}>
-              <span className={styles.detailLabel}>outputVar:</span>
-              <pre className={styles.detailValue}>
-                {renderVal(activeNode?.outputVar)}
-              </pre>
-              {activeNode?.description?.map((description) => {
-                return Object.keys(description).map((key) => {
-                  return (
-                    <>
-                      <span title={key} className={styles.detailLabel}>
-                        {key}:
-                      </span>
-                      <pre className={styles.detailValue}>
-                        {renderVal(description[key])}
-                      </pre>
-                    </>
-                  );
-                });
+              {Object.keys(activeNode?.operatorInfo || {}).map((key) => {
+                return (
+                  <React.Fragment key={key}>
+                    <span key={key} title={key} className={styles.detailLabel}>
+                      {key}:
+                    </span>
+                    <pre key={key + "val"} className={styles.detailValue}>
+                      {renderVal(activeNode?.operatorInfo[key])}
+                    </pre>
+                  </React.Fragment>
+                );
               })}
             </div>
           </div>
@@ -215,4 +217,84 @@ function Explain(props: ExplainProps) {
     </div>
   );
 }
+
+function convertExplainData(data: {
+  id: number;
+  name: string;
+  "operator info": string;
+  "profiling data": string;
+  dependencies: string;
+}): ExplainNode {
+  const operatorInfo = formatExplainData(data["operator info"]);
+  const profilingData = safeParse(data["profiling data"]);
+  if (typeof profilingData === "object") {
+    profilingData.totalTime = Number(
+      profilingData.totalTime.replace("(us)", "")
+    );
+    profilingData.execTime = Number(profilingData.execTime.replace("(us)", ""));
+  }
+  return {
+    id: data.id,
+    name: data.name,
+    dependencies: data.dependencies
+      ? data.dependencies.split(",").map((each) => Number(each))
+      : [],
+    profilingData,
+    operatorInfo,
+  };
+}
+
+function formatExplainData(data: string): ExplainOperator {
+  const regex = /(\w+): ([\s\S]*?)(?=\n\w+:|$)/g;
+  let match;
+  const result: {
+    [key: string]: string;
+  } = {};
+
+  while ((match = regex.exec(data)) !== null) {
+    result[match[1]] = match[2].trim();
+  }
+  return result;
+}
+
+function safeParse(str: string) {
+  try {
+    return JSON.parse(str);
+  } catch (e) {
+    return str;
+  }
+}
+
+const convertedDashboardData = (data: any[]): ExplainNode[] => {
+  return data.map((each) => {
+    const profile = each.profiles?.[0] as any;
+    if (profile) {
+      if (profile.totalDurationInUs) {
+        profile.totalTime = profile.totalDurationInUs;
+        delete profile.totalDurationInUs;
+      }
+      if (profile.execDurationInUs) {
+        profile.execTime = profile.execDurationInUs;
+        delete profile.execDurationInUs;
+      }
+    }
+
+    return {
+      id: each.id,
+      name: each.name,
+      dependencies: each.dependencies,
+      profilingData: profile,
+      operatorInfo: {
+        outputVar: each.outputVar,
+        ...(each.description?.reduce((acc: any, cur: any) => {
+          return {
+            ...acc,
+            ...cur,
+          };
+        }, {}) as any),
+      },
+    };
+  });
+};
 export default Explain;
+export { convertExplainData, formatExplainData, convertedDashboardData };

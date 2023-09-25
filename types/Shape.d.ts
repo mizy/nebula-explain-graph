@@ -2,8 +2,8 @@ import { VEditorData, VEditorNode } from "@vesoft-inc/veditor/types/Model/Schema
 import { VEditor } from "@vesoft-inc/veditor";
 export type ExplainProfile = {
     rows: number;
-    execDurationInUs: number;
-    totalDurationInUs: number;
+    execTime: number;
+    totalTime: number;
     [key: string]: any;
 };
 export type ExplainOutput = {
@@ -11,18 +11,21 @@ export type ExplainOutput = {
     type: string;
     name: string;
 } | string;
-export type ExplainDescription = Record<string, any>[];
+export type ExplainOperator = {
+    outputVar?: ExplainOutput;
+    [key: string]: any;
+};
 export type ExplainNode = {
     id: number;
     name: string;
-    profiles?: ExplainProfile[];
-    outputVar: ExplainOutput;
+    profilingData: ExplainProfile;
+    operatorInfo: ExplainOperator;
     dependencies?: number[];
-    description?: ExplainDescription;
 };
 export type ExplainData = ExplainNode[];
 export type ExplainConfig = {
     data?: ExplainData;
+    type?: "explain" | "profile";
 };
 declare class ExplainPlugin {
     editor: VEditor;
@@ -35,7 +38,7 @@ declare class ExplainPlugin {
     setData(data: ExplainData): Promise<void>;
     convertData(data: ExplainData): VEditorData;
     registerShape(): void;
-    renderNode(data: VEditorNode): import("react/jsx-runtime").JSX.Element;
+    renderNode: (data: VEditorNode) => import("react/jsx-runtime").JSX.Element;
     renderOutputVar(data: any): any;
     renderSplitNum(num: number): string;
     caches: Record<string, DOMRect>;
