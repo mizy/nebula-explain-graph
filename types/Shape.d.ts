@@ -4,6 +4,7 @@ export type ExplainProfile = {
     rows: number;
     execTime: number;
     totalTime: number;
+    rank?: number;
     [key: string]: any;
 };
 export type ExplainOutput = {
@@ -21,6 +22,11 @@ export type ExplainNode = {
     profilingData: ExplainProfile;
     operatorInfo: ExplainOperator;
     dependencies?: number[];
+    branchInfo?: BranchInfo;
+};
+export type BranchInfo = {
+    conditionNodeId?: number;
+    isDoBranch?: boolean;
 };
 export type ExplainData = ExplainNode[];
 export type ExplainConfig = {

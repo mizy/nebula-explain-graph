@@ -16,9 +16,17 @@ import { Button, message } from "antd";
 import React from "react";
 const updatePanAnimation = (editor: VEditor) => {
   setTimeout(() => {
-    editor.controller.autoScale();
-    editor.controller.autoFit();
-  }, 200);
+    editor.paper.style.transition = "all 0.2s";
+    const { width } = editor.dom.getBoundingClientRect();
+    const bbox = editor.paper.getBBox();
+    const scale = editor.controller.scale;
+    editor.controller.x = (width - bbox.width * scale) / 2 - bbox.x * scale;
+    editor.controller.update();
+    editor.graph.update();
+    setTimeout(() => {
+      editor.paper.style.transition = "";
+    }, 200);
+  }, 201);
 };
 export interface ExplainProps {
   style?: React.CSSProperties;
@@ -162,14 +170,14 @@ function Explain(props: ExplainProps) {
         <div className={styles.graphArea}>
           <div className={styles.graphWrapper} ref={domRef}></div>
           <div className={styles.buttonArea}>
-            <Button onMouseDown={zoomOut}>
+            <Button onMouseDown={zoomIn}>
               <img src={plusSVG} style={{ paddingTop: 3 }} alt="plus" />
             </Button>
-            <Button onMouseDown={zoomIn}>
-              <img src={minusSVG} style={{ paddingTop: 3 }} alt="plus" />
+            <Button onMouseDown={zoomOut}>
+              <img src={minusSVG} style={{ paddingTop: 3 }} alt="minus" />
             </Button>
             <Button onClick={onChangeLayoutSort}>
-              <img src={sortSVG} alt="plus" />
+              <img src={sortSVG} alt="sort" />
             </Button>
           </div>
         </div>
@@ -271,11 +279,9 @@ const convertedDashboardData = (data: any[]): ExplainNode[] => {
     if (profile) {
       if (profile.totalDurationInUs) {
         profile.totalTime = profile.totalDurationInUs;
-        delete profile.totalDurationInUs;
       }
       if (profile.execDurationInUs) {
         profile.execTime = profile.execDurationInUs;
-        delete profile.execDurationInUs;
       }
     }
 
@@ -284,6 +290,7 @@ const convertedDashboardData = (data: any[]): ExplainNode[] => {
       name: each.name,
       dependencies: each.dependencies,
       profilingData: profile,
+      branchInfo: each.branchInfo,
       operatorInfo: {
         outputVar: each.outputVar,
         ...(each.description?.reduce((acc: any, cur: any) => {

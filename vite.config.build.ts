@@ -13,6 +13,7 @@ export default defineConfig({
       fileName: 'index',
       formats: ["umd", "es"],
     },
+    minify: false,
     rollupOptions: {
       // make sure to externalize deps that shouldn't be bundled
       // into your library

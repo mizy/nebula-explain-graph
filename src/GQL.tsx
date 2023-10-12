@@ -32,7 +32,12 @@ function NgqlRender(props: Props) {
     ngqls.forEach((item, index) => {
       const ngqlArr = item.split(" ");
       if (index !== 0) {
-        res.push(<br key={"br" + index} />);
+        res.push(
+          <>
+            <span>;</span>
+            <br key={"br" + index} />
+          </>
+        );
       }
       res.push(
         ...ngqlArr.map((item, index2) => {
