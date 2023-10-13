@@ -46,6 +46,7 @@ function Explain(props: ExplainProps) {
   useEffect(() => {
     const editor = new VEditor({
       dom: domRef.current!,
+      mode: "view",
     });
     editorRef.current = editor;
     explainPluginRef.current = new ExplainPlugin(editor, {

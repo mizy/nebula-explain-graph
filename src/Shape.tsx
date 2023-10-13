@@ -77,7 +77,7 @@ class ExplainPlugin {
     await this.editor.schema.setInitData(this.data);
     this.editor.config.dagreOption = {
       rankdir: "BT",
-      ranker: "longest-path",
+      // ranker: "longest-path",
       ranksep: this.config.type === "explain" ? 100 : 200,
     };
     await this.editor.schema.format();

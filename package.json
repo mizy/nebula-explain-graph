@@ -1,6 +1,6 @@
 {
   "name": "@vesoft-inc/nebula-explain-graph",
-  "version": "1.0.1",
+  "version": "1.0.1-beta.0",
   "type": "module",
   "scripts": {
     "dev": "vite",

@@ -1,6 +1,6 @@
 import "./App.css";
 import { Button } from "antd";
-import Explain, { convertExplainData } from "./Explain";
+import Explain, { convertExplainData, convertedDashboardData } from "./Explain";
 
 const dashboardSlowQueryData = [
   {
@@ -338,6 +338,7 @@ const explainData = [
   },
 ];
 dashboardSlowQueryData;
+profileData;
 console.log(explainData.map((each) => convertExplainData(each)));
 
 function App() {
@@ -350,8 +351,8 @@ function App() {
       </div>
       <Explain
         // type="explain"
-        data={profileData.map((each) => convertExplainData(each))}
-        // data={convertedDashboardData(dashboardSlowQueryData)}
+        // data={profileData.map((each) => convertExplainData(each))}
+        data={convertedDashboardData(dashboardSlowQueryData)}
         style={{ width: 1000, height: 800 }}
         gql="PROFILE match (v:monster)-[e]-(v1:monster) return v,e,v1;"
       />
