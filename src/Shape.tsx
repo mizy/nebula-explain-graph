@@ -18,7 +18,7 @@ export type ExplainProfile = {
   rank?: number;
   [key: string]: any;
 };
-
+export const colors = ["#D32F2F", "#FF6F00", "#F2C94C", "#00BFA5"];
 export type ExplainOutput =
   | {
       colNames: string[];
@@ -180,7 +180,7 @@ class ExplainPlugin {
         (node.data as ExplainNode).profilingData.rank = index;
       }
     });
-    this.totalRows = totalRows;
+    this.totalRows = Math.max(totalRows, 1);
     this.totalTime = totalTime;
 
     return res;
@@ -311,10 +311,7 @@ class ExplainPlugin {
     const { profilingData, operatorInfo } = data.data as ExplainNode;
     const progress = (profilingData?.totalTime / this.totalTime) * 100;
     const rank = profilingData?.rank || 0;
-    const green = [14, 188, 156];
-    const red = [235, 87, 87];
-    const yellow = [242, 201, 76];
-    const color = rank === 0 ? red : rank === 1 ? yellow : green;
+    const color = colors[rank] || "#00BFA5";
     return (
       <div className={styles.explainNode} data-name={data.data?.name}>
         <div className={styles.header}>
@@ -337,7 +334,7 @@ class ExplainPlugin {
                 <span
                   style={{
                     width: `${Math.max(progress, 1)}%`,
-                    backgroundColor: `rgb(${color.join(",")})`,
+                    backgroundColor: `${color}`,
                   }}
                 ></span>
               </span>

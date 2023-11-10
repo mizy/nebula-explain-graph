@@ -7,6 +7,7 @@ export type ExplainProfile = {
     rank?: number;
     [key: string]: any;
 };
+export declare const colors: string[];
 export type ExplainOutput = {
     colNames: string[];
     type: string;

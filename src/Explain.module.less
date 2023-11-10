@@ -116,7 +116,7 @@
       .progress {
         position: relative;
         height: 12px;
-        border-radius: 12px;
+        // border-radius: 12px;
         // background-color: #E8E8E8;
         display: inline-block;
         overflow: hidden;
@@ -124,7 +124,7 @@
         >span {
           position: absolute;
           left: 0;
-          border-radius: 12px;
+          // border-radius: 12px;
           height: 12px;
 
           @keyframes progressActive {
@@ -150,7 +150,7 @@
             background-color: #ffffff;
             border-radius: 100px;
             opacity: 0;
-            animation-name: progressActive;
+            // animation-name: progressActive;
             animation-duration: 2.4s;
             animation-timing-function: cubic-bezier(0.23, 1, 0.32, 1);
             animation-iteration-count: infinite;
@@ -260,6 +260,32 @@
         text-wrap: wrap;
         max-height: 120px;
         overflow-y: auto;
+      }
+    }
+  }
+
+  .rankArea {
+    position: absolute;
+    top: 20px;
+    left: 20px;
+
+    .rankItem {
+      span {
+        width: 10px;
+        height: 10px;
+        display: inline-block;
+        border-radius: 50%;
+        margin-right: 5px;
+      }
+
+      padding:5px 10px;
+      color:#64748B;
+      font-size: 14px;
+      border-radius: 15px;
+
+      &:hover {
+        background-color: #E7F3FF;
+        cursor: pointer;
       }
     }
   }

@@ -5,6 +5,7 @@ import ExplainPlugin, {
   ExplainData,
   ExplainNode,
   ExplainOperator,
+  colors,
 } from "./Shape";
 import NgqlRender from "./GQL";
 import copySVG from "./assets/copy.svg";
@@ -14,6 +15,7 @@ import sortSVG from "./assets/sort.svg";
 import copy from "copy-to-clipboard";
 import { Button, message } from "antd";
 import React from "react";
+import { VEditorNode } from "@vesoft-inc/veditor/types/Model/Schema";
 const updatePanAnimation = (editor: VEditor) => {
   setTimeout(() => {
     editor.paper.style.transition = "all 0.2s";
@@ -43,6 +45,7 @@ function Explain(props: ExplainProps) {
   const zoomFrame = useRef<number>();
   const [activeNode, setActiveNode] = useState<ExplainNode | undefined>();
   const activeRef = useRef<ExplainNode | undefined>();
+  const [legendNodes, setLegendNodes] = useState<VEditorNode[]>([]);
   useEffect(() => {
     const editor = new VEditor({
       dom: domRef.current!,
@@ -71,6 +74,12 @@ function Explain(props: ExplainProps) {
   useEffect(() => {
     if (props.data && explainPluginRef.current) {
       explainPluginRef.current?.setData(props.data);
+      const nodes = explainPluginRef.current?.data?.nodes.sort((a, b) => {
+        const rankA = (a.data as ExplainNode).profilingData.rank || 0;
+        const rankB = (b.data as ExplainNode).profilingData.rank || 0;
+        return rankA - rankB;
+      });
+      setLegendNodes(nodes || []);
     }
   }, [props.data]);
 
@@ -144,6 +153,14 @@ function Explain(props: ExplainProps) {
       }
     }
     return JSON.stringify(val, null, 2);
+  };
+
+  const focusNode = (node: VEditorNode) => {
+    const editor = editorRef.current as VEditor;
+    const instanceNode = editor.graph.node.nodes[node.uuid!];
+    editor.graph.node.unActive();
+    editor.graph.node.setActive(instanceNode);
+    setActiveNode(node.data! as ExplainNode);
   };
 
   return (
@@ -221,6 +238,29 @@ function Explain(props: ExplainProps) {
               })}
             </div>
           </div>
+        </div>
+        <div className={styles.rankArea}>
+          {legendNodes?.map((item) => {
+            const node = item.data as ExplainNode;
+            return (
+              <div
+                key={node.id}
+                onClick={() => {
+                  focusNode(item);
+                }}
+                className={styles.rankItem}
+              >
+                <span
+                  style={{
+                    background:
+                      colors[node.profilingData.rank || 0] ||
+                      colors[colors.length - 1],
+                  }}
+                ></span>
+                {node.name}
+              </div>
+            );
+          })}
         </div>
       </div>
     </div>
