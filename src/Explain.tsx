@@ -278,7 +278,7 @@ function convertExplainData(data: {
   const profilingData = safeParse(data["profiling data"]);
   if (typeof profilingData === "object") {
     profilingData.totalTime = Number(
-      profilingData.totalTime.replace("(us)", "")
+      profilingData.totalTime?.replace("(us)", "")
     );
     profilingData.execTime = Number(profilingData.execTime.replace("(us)", ""));
   }

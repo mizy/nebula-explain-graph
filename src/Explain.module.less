@@ -1,5 +1,4 @@
 .vesoftExplainGraph {
-  border: 1px solid #ccc;
   display: flex;
   flex-direction: column;
 
@@ -28,6 +27,10 @@
     height: 100%;
 
     :global {
+      .ve-editor-svg {
+        top: 0;
+      }
+
       .ve-node-shape:focus {
         outline: none;
       }
@@ -268,6 +271,12 @@
     position: absolute;
     top: 20px;
     left: 20px;
+    max-height: calc(100% - 40px);
+    overflow: auto;
+
+    ::-webkit-scrollbar {
+      display: none;
+    }
 
     .rankItem {
       span {

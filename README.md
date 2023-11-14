@@ -3,6 +3,18 @@ a graph component for visualize the database explain result, support graphviz da
 
 <img width="981" alt="image" src="https://github.com/nb-cloud/nebula-explain-graph/assets/7129229/c5448175-057a-4c34-82c9-ff86e63a169b">
 
+# usage
+```jsx
+ <Explain style={{ height: 600 }} data={data} />
+```
+
+# dev
+
+```
+npm install
+npm run dev
+```
+
 # build
 
 ```

@@ -1,13 +1,14 @@
 {
   "name": "@vesoft-inc/nebula-explain-graph",
-  "version": "1.0.1-beta.1",
+  "version": "1.0.2-beta.1",
   "type": "module",
   "scripts": {
     "dev": "vite",
     "build": "tsc && vite build --config vite.config.build.ts && npm run build:types",
     "lint": "eslint . --ext ts,tsx --report-unused-disable-directives --max-warnings 0",
     "build:types": " tsc --noEmit false --declaration true  --emitDeclarationOnly --outDir types",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "postpublish": "npx cnpm sync @vesoft-inc/nebula-explain-graph"
   },
   "files": [
     "dist",
