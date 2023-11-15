@@ -180,7 +180,7 @@ class ExplainPlugin {
         (node.data as ExplainNode).profilingData.rank = index;
       }
     });
-    this.totalRows = Math.max(totalRows, 1);
+    this.totalRows = Math.max(totalRows, 100);
     this.totalTime = totalTime;
 
     return res;
@@ -304,7 +304,7 @@ class ExplainPlugin {
         return path;
       },
     });
-    this.initShadowFilter(this.editor.svg!);
+    this.initShadowFilter(this.editor);
   }
 
   renderNode = (data: VEditorNode) => {
@@ -394,14 +394,13 @@ class ExplainPlugin {
     return this.caches[data.uuid];
   }
 
-  initShadowFilter = (svg: SVGElement) => {
-    const filter = document.createElementNS("http://www.w3.org/2000/svg", "g");
-    ReactDOM.render(
-      <>
-        <filter id="ve-blue-shadow" filterUnits="userSpaceOnUse">
+  initShadowFilter = (editor: VEditor) => {
+    const shadow = editor.graph.shadow?.querySelector("defs");
+    if (!shadow) return;
+    const filter = Utils.dom.svgWrapper(`<filter id="ve-blue-shadow" >
           <feGaussianBlur in="SourceAlpha" stdDeviation="6" />
           <feOffset dx="0" dy="1" result="offsetblur" />
-          <feFlood floodColor="#0091ff" />
+          <feFlood flood-color="#0091ff" />
           <feComposite in2="offsetblur" operator="in" />
           <feComponentTransfer>
             <feFuncA type="linear" slope="1" />
@@ -410,11 +409,8 @@ class ExplainPlugin {
             <feMergeNode />
             <feMergeNode in="SourceGraphic" />
           </feMerge>
-        </filter>
-      </>,
-      filter
-    );
-    svg.querySelector("defs")?.appendChild(filter);
+        </filter>`);
+    shadow?.appendChild(filter);
   };
 }
 export default ExplainPlugin;

@@ -50,6 +50,7 @@ function Explain(props: ExplainProps) {
     const editor = new VEditor({
       dom: domRef.current!,
       mode: "view",
+      showBackGrid: false,
     });
     editorRef.current = editor;
     explainPluginRef.current = new ExplainPlugin(editor, {
@@ -83,7 +84,7 @@ function Explain(props: ExplainProps) {
     }
   }, [props.data]);
 
-  const onChangeLayoutSort = () => {
+  const onChangeLayoutSort = async () => {
     const editor = editorRef.current as VEditor;
     editor.config.dagreOption = {
       ...editor.config.dagreOption,
@@ -95,7 +96,8 @@ function Explain(props: ExplainProps) {
       line.data.fromPoint = isRevert ? 3 : 2;
       line.data.toPoint = isRevert ? 2 : 3;
     }
-    editor.schema.format();
+    await editor.schema.format();
+    editor.controller.autoFit();
   };
 
   const zoomOut = useCallback(() => {
@@ -248,7 +250,10 @@ function Explain(props: ExplainProps) {
                 onClick={() => {
                   focusNode(item);
                 }}
-                className={styles.rankItem}
+                className={
+                  styles.rankItem +
+                  `${activeNode?.id === node.id ? ` ${styles.active}` : ""}`
+                }
               >
                 <span
                   style={{
@@ -278,7 +283,7 @@ function convertExplainData(data: {
   const profilingData = safeParse(data["profiling data"]);
   if (typeof profilingData === "object") {
     profilingData.totalTime = Number(
-      profilingData.totalTime?.replace("(us)", "")
+      profilingData.totalTime?.replace("(us)", "") || 0
     );
     profilingData.execTime = Number(profilingData.execTime.replace("(us)", ""));
   }

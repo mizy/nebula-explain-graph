@@ -25,6 +25,7 @@
 
   .graphWrapper {
     height: 100%;
+    background: var(--bg-color2, rgba(131, 131, 131, 0.10));
 
     :global {
       .ve-editor-svg {
@@ -274,7 +275,7 @@
     max-height: calc(100% - 40px);
     overflow: auto;
 
-    ::-webkit-scrollbar {
+    &::-webkit-scrollbar {
       display: none;
     }
 
@@ -292,7 +293,8 @@
       font-size: 14px;
       border-radius: 15px;
 
-      &:hover {
+      &:hover,
+      &.active {
         background-color: #E7F3FF;
         cursor: pointer;
       }

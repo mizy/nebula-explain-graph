@@ -50,6 +50,6 @@ declare class ExplainPlugin {
     renderSplitNum(num: number): string;
     caches: Record<string, DOMRect>;
     getSize(data: VEditorNode): DOMRect;
-    initShadowFilter: (svg: SVGElement) => void;
+    initShadowFilter: (editor: VEditor) => void;
 }
 export default ExplainPlugin;
