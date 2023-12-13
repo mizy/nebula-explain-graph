@@ -94,6 +94,10 @@ class ExplainPlugin {
     let totalRows = 0;
     const do_lines: any[] = [];
     const dag_map: any = {};
+    const dataMap: Record<string, ExplainNode> = {};
+    data.forEach((item) => {
+      dataMap[item.id] = item;
+    });
     data.forEach((item) => {
       const node: VEditorNode = {
         uuid: item.id.toString(),
@@ -109,6 +113,7 @@ class ExplainPlugin {
       totalRows += item.profilingData?.rows || 0;
       res.nodes.push(node);
       item.dependencies?.forEach((id) => {
+        const fromNode = dataMap[id];
         const line: VEditorLine = {
           from: id.toString(),
           to: item.id.toString(),
@@ -116,7 +121,7 @@ class ExplainPlugin {
           toPoint: 3,
           type: "explainLine",
           data: {
-            rows: item.profilingData.rows,
+            rows: fromNode?.profilingData?.rows,
           },
         };
         res.lines.push(line);
