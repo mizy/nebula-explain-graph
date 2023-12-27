@@ -25,16 +25,16 @@ jobs:
             echo "Version changed, publishing to npm..."
             cd ./source/nebula-explain-graph
             npm install
-            npm build
-            npm build:types
+            npm run build
+            npm run build:types
             npm publish
             npx -y cnpm sync @vesoft-inc/nebula-explain-graph
           else
             echo "Version changed, publishing to npm with beta tag..."
             cd ./source/nebula-explain-graph
             npm install
-            npm build
-            npm build:types
+            npm run build
+            npm run build:types
             npm publish --tag beta
             npx -y cnpm sync @vesoft-inc/nebula-explain-graph
           fi
