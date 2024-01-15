@@ -294,11 +294,11 @@ function convertExplainData(data: {
 }): ExplainNode {
   const operatorInfo = formatExplainData(data["operator info"]);
   const profilingData = safeParse(data["profiling data"]);
-  if (typeof profilingData === "object") {
-    profilingData.totalTime = Number(
-      profilingData.totalTime?.replace("(us)", "") || 0
-    );
-    profilingData.execTime = Number(profilingData.execTime.replace("(us)", ""));
+  if (typeof profilingData === "object"&&profilingData.totalTime) {
+      profilingData.totalTime = Number(
+        profilingData.totalTime?.replace("(us)", "") || 0
+      );
+      profilingData.execTime = Number(profilingData.execTime.replace("(us)", ""));
   }
   return {
     id: data.id,
