@@ -91,8 +91,7 @@ function Explain(props: ExplainProps) {
     editor.config.dagreOption = {
       // ...editor.config.dagreOption,
       rankdir: editor.config.dagreOption?.rankdir === "TB" ? "BT" : "TB",
-      ranksep: 10,
-      nodesep: 10,
+      ranksep: 100,
     };
     const isRevert = editor.config.dagreOption?.rankdir === "TB";
     for (const key in editor.graph.line.lines) {
