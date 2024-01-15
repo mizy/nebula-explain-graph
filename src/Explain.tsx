@@ -12,6 +12,7 @@ import copySVG from "./assets/copy.svg";
 import plusSVG from "./assets/plus.svg";
 import minusSVG from "./assets/minus.svg";
 import sortSVG from "./assets/sort.svg";
+import closeSVG from "./assets/close.svg";
 import copy from "copy-to-clipboard";
 import { Button, message } from "antd";
 import React from "react";
@@ -57,6 +58,7 @@ function Explain(props: ExplainProps) {
       type,
       data: props.data,
     });
+
     editor.graph.on("node:click", ({ node }: any) => {
       !activeRef.current && updatePanAnimation(editor);
       setActiveNode(node.data.data as any);
@@ -87,8 +89,10 @@ function Explain(props: ExplainProps) {
   const onChangeLayoutSort = async () => {
     const editor = editorRef.current as VEditor;
     editor.config.dagreOption = {
-      ...editor.config.dagreOption,
+      // ...editor.config.dagreOption,
       rankdir: editor.config.dagreOption?.rankdir === "TB" ? "BT" : "TB",
+      ranksep: 10,
+      nodesep: 10,
     };
     const isRevert = editor.config.dagreOption?.rankdir === "TB";
     for (const key in editor.graph.line.lines) {
@@ -98,6 +102,7 @@ function Explain(props: ExplainProps) {
     }
     await editor.schema.format();
     editor.controller.autoFit();
+    editor.repaint();
   };
 
   const zoomOut = useCallback(() => {
@@ -208,7 +213,15 @@ function Explain(props: ExplainProps) {
           }}
         >
           <div className={styles.detailContent} style={{ width: detailWidth }}>
-            <div className={styles.detailTitle}>{activeNode?.name}</div>
+            <div className={styles.detailTitle}>
+              <span>{activeNode?.name}</span>
+              <img
+                src={closeSVG}
+                alt="close"
+                onClick={() => {
+                  setActiveNode(undefined);
+                }} />
+            </div>
             <div className={styles.detailPTitle}>Profiling data</div>
             <div className={styles.detailInfo}>
               {Object.keys(activeNode?.profilingData || {}).map((key) => {

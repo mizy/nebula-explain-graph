@@ -5,11 +5,11 @@ import {
 } from "@vesoft-inc/veditor/types/Model/Schema";
 import { InstanceNode } from "@vesoft-inc/veditor/types/Shape/Node";
 import { Utils, VEditor } from "@vesoft-inc/veditor";
-import ReactDOM from "react-dom";
 import styles from "./Explain.module.less";
 import { InstanceLine } from "@vesoft-inc/veditor/types/Shape/Line";
 import { AnyMap } from "@vesoft-inc/veditor/types/Utils";
 import { mat2d } from "gl-matrix";
+import { createRoot } from 'react-dom/client';
 
 export type ExplainProfile = {
   rows: number;
@@ -65,10 +65,10 @@ class ExplainPlugin {
     this.init();
   }
 
-  init() {
+  async init() {
     this.registerShape();
     if (this.config.data) {
-      this.setData(this.config.data);
+      await this.setData(this.config.data);
     }
   }
 
@@ -78,11 +78,16 @@ class ExplainPlugin {
     this.editor.config.dagreOption = {
       rankdir: "BT",
       // ranker: "longest-path",
-      ranksep: this.config.type === "explain" ? 100 : 200,
+      ranksep: 100,
     };
-    await this.editor.schema.format();
-    this.editor.controller.autoScale();
-    this.editor.controller.autoFit();
+    return new Promise((resolve) => {
+      setTimeout(() => {
+        this.editor.schema.format();
+        this.editor.controller.autoScale();
+        this.editor.controller.autoFit();
+        resolve(true);
+      }, 34);//for 2 fps timeout
+    });
   }
 
   convertData(data: ExplainData): VEditorData {
@@ -202,8 +207,8 @@ class ExplainPlugin {
           instanceNode.shape = instanceNode.shape
             ? instanceNode.shape
             : document.createElementNS("http://www.w3.org/2000/svg", "g");
-
-          ReactDOM.render(
+          (instanceNode as any).reactRoot = (instanceNode as any).reactRoot || createRoot(instanceNode.shape);
+          (instanceNode as any).reactRoot.render(
             <>
               <rect
                 filter="url(#ve-black-shadow)"
@@ -221,8 +226,7 @@ class ExplainPlugin {
               >
                 {this.renderNode(data)}
               </foreignObject>
-            </>,
-            instanceNode.shape
+            </>
           );
           return instanceNode.shape;
         },

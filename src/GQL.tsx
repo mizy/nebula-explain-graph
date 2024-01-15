@@ -1,5 +1,5 @@
 import { Popover } from "antd";
-import { useMemo } from "react";
+import { Fragment, useMemo } from "react";
 
 import {
   NgqlFuncTools,
@@ -33,10 +33,10 @@ function NgqlRender(props: Props) {
       const ngqlArr = item.split(" ");
       if (index !== 0) {
         res.push(
-          <>
+          <Fragment key={"line"+index}>
             <span>;</span>
             <br key={"br" + index} />
-          </>
+          </Fragment>
         );
       }
       res.push(

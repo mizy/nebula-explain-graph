@@ -57,7 +57,7 @@
 
     .explainNode {
       border-radius: 10px;
-      font-size: 8px;
+      font-size: 14px;
       background-color: #fff;
       border-radius: 20px;
 
@@ -69,7 +69,6 @@
         background-color: #576272;
         border-top-left-radius: 20px;
         border-top-right-radius: 20px;
-        font-size: 16px;
         font-weight: 400;
         color: #fff;
       }
@@ -216,7 +215,6 @@
     background: #fff;
     overflow: hidden;
     overflow-y: auto;
-    // position: absolute;
     right: 0;
     top: 0;
 
@@ -231,6 +229,13 @@
       font-size: 18px;
       font-style: normal;
       font-weight: 700;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+
+      >img {
+        cursor: pointer;
+      }
     }
 
     .detailPTitle {
@@ -261,9 +266,8 @@
         line-height: 150%;
         margin: 0;
         word-break: break-word;
-        text-wrap: wrap;
-        max-height: 120px;
-        overflow-y: auto;
+        overflow-x: auto;
+        // text-wrap: wrap;
       }
     }
   }
@@ -295,7 +299,7 @@
 
       &:hover,
       &.active {
-        background-color: #E7F3FF;
+        background-color: rgba(231, 243, 255, 0.8);
         cursor: pointer;
       }
     }
