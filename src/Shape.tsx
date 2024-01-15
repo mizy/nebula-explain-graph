@@ -12,9 +12,9 @@ import { mat2d } from "gl-matrix";
 import { createRoot } from 'react-dom/client';
 
 export type ExplainProfile = {
-  rows: number;
-  execTime: number;
-  totalTime: number;
+  rows?: number;
+  execTime?: number;
+  totalTime?: number;
   rank?: number;
   [key: string]: any;
 };
@@ -318,7 +318,7 @@ class ExplainPlugin {
 
   renderNode = (data: VEditorNode) => {
     const { profilingData, operatorInfo } = data.data as ExplainNode;
-    const progress = (profilingData?.totalTime / this.totalTime) * 100;
+    const progress = ((profilingData?.totalTime||0) / this.totalTime) * 100;
     const rank = profilingData?.rank || 0;
     const color = colors[rank] || "#00BFA5";
     return (
@@ -378,7 +378,8 @@ class ExplainPlugin {
     return res;
   }
 
-  renderSplitNum(num: number): string {
+  renderSplitNum(num?: number): string {
+    if(num === undefined) return "-";
     const str = num.toString();
     const res: string[] = [];
     for (let i = str.length - 1; i >= 0; i--) {
