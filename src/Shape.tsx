@@ -81,14 +81,9 @@ class ExplainPlugin {
       // ranker: "longest-path",
       ranksep: 100,
     };
-    return new Promise((resolve) => {
-      setTimeout(() => {
-        this.editor.schema.format();
-        this.editor.controller.autoScale();
-        this.editor.controller.autoFit();
-        resolve(true);
-      }, 34);//for 2 fps timeout
-    });
+    this.editor.schema.format();
+    this.editor.controller.autoScale();
+    this.editor.controller.autoFit();
   }
 
   convertData(data: ExplainData): VEditorData {
