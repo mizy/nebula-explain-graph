@@ -10,6 +10,7 @@ import { InstanceLine } from "@vesoft-inc/veditor/types/Shape/Line";
 import { AnyMap } from "@vesoft-inc/veditor/types/Utils";
 import { mat2d } from "gl-matrix";
 import { createRoot } from 'react-dom/client';
+import { flushSync } from 'react-dom';
 
 export type ExplainProfile = {
   rows?: number;
@@ -208,7 +209,8 @@ class ExplainPlugin {
             ? instanceNode.shape
             : document.createElementNS("http://www.w3.org/2000/svg", "g");
           (instanceNode as any).reactRoot = (instanceNode as any).reactRoot || createRoot(instanceNode.shape);
-          (instanceNode as any).reactRoot.render(
+          flushSync(() => {
+            (instanceNode as any).reactRoot.render(
             <>
               <rect
                 filter="url(#ve-black-shadow)"
@@ -228,6 +230,7 @@ class ExplainPlugin {
               </foreignObject>
             </>
           );
+          })
           return instanceNode.shape;
         },
       },
