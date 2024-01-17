@@ -79,7 +79,7 @@ class ExplainPlugin {
     this.editor.config.dagreOption = {
       rankdir: "BT",
       // ranker: "longest-path",
-      ranksep: 100,
+      ranksep: 150,
     };
     this.editor.schema.format();
     this.editor.controller.autoScale();
