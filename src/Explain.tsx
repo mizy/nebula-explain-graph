@@ -101,7 +101,6 @@ function Explain(props: ExplainProps) {
     }
     await editor.schema.format();
     editor.controller.autoFit();
-    editor.repaint();
   };
 
   const zoomOut = useCallback(() => {
