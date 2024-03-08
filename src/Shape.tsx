@@ -227,7 +227,7 @@ class ExplainPlugin {
       })
     });
     res.lines = res.lines.sort((a, b) => a.data?.rows as number - (b.data?.rows as number));
-    res.nodes = res.nodes.sort((a, b) => a.data?.timeMs as number - (b.data?.timeMs as number)).map((node, index) => {
+    res.nodes = res.nodes.sort((a, b) => b.data?.timeMs as number - (a.data?.timeMs as number)).map((node, index) => {
       (node.data as OperatorStats).rank = index;
       return node;
     });

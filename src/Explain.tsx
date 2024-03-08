@@ -17,6 +17,7 @@ import copy from "copy-to-clipboard";
 import { Button, message } from "antd";
 import React from "react";
 import { VEditorNode } from "@vesoft-inc/veditor/types/Model/Schema";
+import { InstanceNode } from '@vesoft-inc/veditor/types/Shape/Node';
 
 export interface ExplainProps {
   style?: React.CSSProperties;
@@ -24,6 +25,21 @@ export interface ExplainProps {
   data?: ExplainData;
   detailWidth?: number;
 }
+const updatePanAnimation = (editor: VEditor, node: InstanceNode) => {
+  setTimeout(() => {
+    editor.paper.style.transition = "all 0.2s";
+    const { width, height } =  editor.dom.getBoundingClientRect();
+    const x =  - (node.data!.x as number) - (node.shapeBBox!.width as number) / 2;
+    const y =  - (node.data!.y as number) - (node.shapeBBox!.height as number) / 2;
+    // const scale = editor.controller.scale;
+    editor.controller.scale = 0.5;
+    editor.controller.moveTo(x*0.5+width / 2, y*0.5+height / 2);
+    editor.graph.update();
+    setTimeout(() => {
+      editor.paper.style.transition = "";
+    }, 200);
+  }, 201);
+};
 function Explain(props: ExplainProps) {
   const { detailWidth = 400 } = props;
   const editorRef = useRef<VEditor>();
@@ -60,11 +76,7 @@ function Explain(props: ExplainProps) {
   useEffect(() => {
     if (props.data && explainPluginRef.current) {
       explainPluginRef.current?.setData(props.data);
-      const nodes = explainPluginRef.current?.data?.nodes.sort((a, b) => {
-        const rankA = (a.data as OperatorStats).timeMs || 0;
-        const rankB = (b.data as OperatorStats).timeMs || 0;
-        return rankA - rankB;
-      });
+      const nodes = explainPluginRef.current?.data?.nodes;
       setLegendNodes(nodes || []);
     }
   }, [props.data]);
@@ -151,6 +163,7 @@ function Explain(props: ExplainProps) {
     editor.graph.node.unActive();
     editor.graph.node.setActive(instanceNode);
     setActiveNode(node.data! as ExplainNode);
+    updatePanAnimation(editor, instanceNode);
   };
 
   return (
