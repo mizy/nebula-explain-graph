@@ -1,0 +1,449 @@
+{
+  "buildTimeInUs": 3471,
+  "header": [
+    "planNodes",
+    "details",
+    "columns"
+  ],
+  "optimizeTimeInUs": 5818,
+  "planNodes": [
+    {
+      "children": [
+        484
+      ],
+      "columns": "e",
+      "details": "e",
+      "id": 486,
+      "name": "Project",
+      "projItems": [
+        "e"
+      ]
+    },
+    {
+      "children": [
+        487,
+        485
+      ],
+      "columns": "#anon1, e",
+      "details": "element_id(#anon1)=right_node_id(e)",
+      "id": 484,
+      "leftExprs": [
+        "element_id(#anon1)"
+      ],
+      "name": "HashJoin[Inner] [D-SPMC]",
+      "rightExprs": [
+        "right_node_id(e)"
+      ]
+    },
+    {
+      "children": [
+        480,
+        479,
+        478,
+        477,
+        476,
+        475,
+        474,
+        473,
+        472,
+        471
+      ],
+      "columns": "#anon1",
+      "id": 487,
+      "name": "UnionAll[S]"
+    },
+    {
+      "columns": "#anon1",
+      "details": "City, #anon1{}",
+      "id": 480,
+      "name": "NodeScan[S]",
+      "nodeTypeId": 1024
+    },
+    {
+      "columns": "#anon1",
+      "details": "Comment, #anon1{}",
+      "id": 479,
+      "name": "NodeScan[S]",
+      "nodeTypeId": 1032
+    },
+    {
+      "columns": "#anon1",
+      "details": "Company, #anon1{}",
+      "id": 478,
+      "name": "NodeScan[S]",
+      "nodeTypeId": 1028
+    },
+    {
+      "columns": "#anon1",
+      "details": "Continent, #anon1{}",
+      "id": 477,
+      "name": "NodeScan[S]",
+      "nodeTypeId": 1026
+    },
+    {
+      "columns": "#anon1",
+      "details": "Country, #anon1{}",
+      "id": 476,
+      "name": "NodeScan[S]",
+      "nodeTypeId": 1025
+    },
+    {
+      "columns": "#anon1",
+      "details": "Person, #anon1{}",
+      "id": 475,
+      "name": "NodeScan[S]",
+      "nodeTypeId": 1029
+    },
+    {
+      "columns": "#anon1",
+      "details": "Post, #anon1{}",
+      "id": 474,
+      "name": "NodeScan[S]",
+      "nodeTypeId": 1031
+    },
+    {
+      "columns": "#anon1",
+      "details": "Tag, #anon1{}",
+      "id": 473,
+      "name": "NodeScan[S]",
+      "nodeTypeId": 1033
+    },
+    {
+      "columns": "#anon1",
+      "details": "TagClass, #anon1{}",
+      "id": 472,
+      "name": "NodeScan[S]",
+      "nodeTypeId": 1034
+    },
+    {
+      "columns": "#anon1",
+      "details": "University, #anon1{}",
+      "id": 471,
+      "name": "NodeScan[S]",
+      "nodeTypeId": 1027
+    },
+    {
+      "children": [
+        483
+      ],
+      "columns": "e",
+      "details": "e",
+      "id": 485,
+      "name": "Project[S]",
+      "projItems": [
+        "e"
+      ]
+    },
+    {
+      "children": [
+        488,
+        489
+      ],
+      "columns": "e, #anon0",
+      "details": "left_node_id(e)=element_id(#anon0)",
+      "id": 483,
+      "leftExprs": [
+        "left_node_id(e)"
+      ],
+      "name": "HashJoin[Inner] [SP]",
+      "rightExprs": [
+        "element_id(#anon0)"
+      ]
+    },
+    {
+      "children": [
+        458,
+        457,
+        456,
+        455,
+        454,
+        453,
+        452,
+        451,
+        450,
+        449,
+        448,
+        447,
+        446,
+        445,
+        444,
+        443,
+        442,
+        441,
+        440,
+        439,
+        438,
+        437,
+        436,
+        435,
+        434
+      ],
+      "columns": "e",
+      "id": 488,
+      "name": "UnionAll[S]"
+    },
+    {
+      "columns": "e",
+      "details": "CITY_IS_PART_OF_COUNTRY, e{}",
+      "edgeTypeId": 1024,
+      "id": 458,
+      "name": "EdgeScan[S]"
+    },
+    {
+      "columns": "e",
+      "details": "COMMENT_HAS_CREATOR_PERSON, e{}",
+      "edgeTypeId": 1039,
+      "id": 457,
+      "name": "EdgeScan[S]"
+    },
+    {
+      "columns": "e",
+      "details": "COMMENT_HAS_TAG_TAG, e{}",
+      "edgeTypeId": 1040,
+      "id": 456,
+      "name": "EdgeScan[S]"
+    },
+    {
+      "columns": "e",
+      "details": "COMMENT_IS_LOCATED_IN_COUNTRY, e{}",
+      "edgeTypeId": 1038,
+      "id": 455,
+      "name": "EdgeScan[S]"
+    },
+    {
+      "columns": "e",
+      "details": "COMMENT_REPLY_OF_COMMENT, e{}",
+      "edgeTypeId": 1042,
+      "id": 454,
+      "name": "EdgeScan[S]"
+    },
+    {
+      "columns": "e",
+      "details": "COMMENT_REPLY_OF_POST, e{}",
+      "edgeTypeId": 1041,
+      "id": 453,
+      "name": "EdgeScan[S]"
+    },
+    {
+      "columns": "e",
+      "details": "COMPANY_IS_LOCATED_IN_COUNTRY, e{}",
+      "edgeTypeId": 1027,
+      "id": 452,
+      "name": "EdgeScan[S]"
+    },
+    {
+      "columns": "e",
+      "details": "COUNTRY_IS_PART_OF_CONTINENT, e{}",
+      "edgeTypeId": 1025,
+      "id": 451,
+      "name": "EdgeScan[S]"
+    },
+    {
+      "columns": "e",
+      "details": "FORUM_CONTAINER_OF_POST, e{}",
+      "edgeTypeId": 1043,
+      "id": 450,
+      "name": "EdgeScan[S]"
+    },
+    {
+      "columns": "e",
+      "details": "FORUM_HAS_MEMBER_PERSON, e{joinDate}",
+      "edgeTypeId": 1044,
+      "id": 449,
+      "name": "EdgeScan[S]"
+    },
+    {
+      "columns": "e",
+      "details": "FORUM_HAS_MODERATOR_PERSON, e{}",
+      "edgeTypeId": 1045,
+      "id": 448,
+      "name": "EdgeScan[S]"
+    },
+    {
+      "columns": "e",
+      "details": "FORUM_HAS_TAG_TAG, e{}",
+      "edgeTypeId": 1046,
+      "id": 447,
+      "name": "EdgeScan[S]"
+    },
+    {
+      "columns": "e",
+      "details": "PERSON_HAS_INTEREST_TAG, e{}",
+      "edgeTypeId": 1033,
+      "id": 446,
+      "name": "EdgeScan[S]"
+    },
+    {
+      "columns": "e",
+      "details": "PERSON_IS_LOCATED_IN_CITY, e{}",
+      "edgeTypeId": 1028,
+      "id": 445,
+      "name": "EdgeScan[S]"
+    },
+    {
+      "columns": "e",
+      "details": "PERSON_KNOWS_PERSON, e{creationDate}",
+      "edgeTypeId": 1034,
+      "id": 444,
+      "name": "EdgeScan[S]"
+    },
+    {
+      "columns": "e",
+      "details": "PERSON_LIKES_COMMENT, e{creationDate}",
+      "edgeTypeId": 1032,
+      "id": 443,
+      "name": "EdgeScan[S]"
+    },
+    {
+      "columns": "e",
+      "details": "PERSON_LIKES_POST, e{creationDate}",
+      "edgeTypeId": 1031,
+      "id": 442,
+      "name": "EdgeScan[S]"
+    },
+    {
+      "columns": "e",
+      "details": "PERSON_STUDY_AT_UNIVERSITY, e{classYear}",
+      "edgeTypeId": 1029,
+      "id": 441,
+      "name": "EdgeScan[S]"
+    },
+    {
+      "columns": "e",
+      "details": "PERSON_WORK_AT_COMPANY, e{workFrom}",
+      "edgeTypeId": 1030,
+      "id": 440,
+      "name": "EdgeScan[S]"
+    },
+    {
+      "columns": "e",
+      "details": "POST_HAS_CREATOR_PERSON, e{}",
+      "edgeTypeId": 1036,
+      "id": 439,
+      "name": "EdgeScan[S]"
+    },
+    {
+      "columns": "e",
+      "details": "POST_HAS_TAG_TAG, e{}",
+      "edgeTypeId": 1037,
+      "id": 438,
+      "name": "EdgeScan[S]"
+    },
+    {
+      "columns": "e",
+      "details": "POST_IS_LOCATED_IN_COUNTRY, e{}",
+      "edgeTypeId": 1035,
+      "id": 437,
+      "name": "EdgeScan[S]"
+    },
+    {
+      "columns": "e",
+      "details": "TAGCLASS_IS_SUBCLASS_OF_TAGCLASS, e{}",
+      "edgeTypeId": 1048,
+      "id": 436,
+      "name": "EdgeScan[S]"
+    },
+    {
+      "columns": "e",
+      "details": "TAG_HAS_TYPE_TAGCLASS, e{}",
+      "edgeTypeId": 1047,
+      "id": 435,
+      "name": "EdgeScan[S]"
+    },
+    {
+      "columns": "e",
+      "details": "UNIVERSITY_IS_LOCATED_IN_CITY, e{}",
+      "edgeTypeId": 1026,
+      "id": 434,
+      "name": "EdgeScan[S]"
+    },
+    {
+      "children": [
+        408,
+        407,
+        406,
+        405,
+        404,
+        403,
+        402,
+        401,
+        400,
+        399
+      ],
+      "columns": "#anon0",
+      "id": 489,
+      "name": "UnionAll[S]"
+    },
+    {
+      "columns": "#anon0",
+      "details": "City, #anon0{}",
+      "id": 408,
+      "name": "NodeScan[S]",
+      "nodeTypeId": 1024
+    },
+    {
+      "columns": "#anon0",
+      "details": "Comment, #anon0{}",
+      "id": 407,
+      "name": "NodeScan[S]",
+      "nodeTypeId": 1032
+    },
+    {
+      "columns": "#anon0",
+      "details": "Company, #anon0{}",
+      "id": 406,
+      "name": "NodeScan[S]",
+      "nodeTypeId": 1028
+    },
+    {
+      "columns": "#anon0",
+      "details": "Country, #anon0{}",
+      "id": 405,
+      "name": "NodeScan[S]",
+      "nodeTypeId": 1025
+    },
+    {
+      "columns": "#anon0",
+      "details": "Forum, #anon0{}",
+      "id": 404,
+      "name": "NodeScan[S]",
+      "nodeTypeId": 1030
+    },
+    {
+      "columns": "#anon0",
+      "details": "Person, #anon0{}",
+      "id": 403,
+      "name": "NodeScan[S]",
+      "nodeTypeId": 1029
+    },
+    {
+      "columns": "#anon0",
+      "details": "Post, #anon0{}",
+      "id": 402,
+      "name": "NodeScan[S]",
+      "nodeTypeId": 1031
+    },
+    {
+      "columns": "#anon0",
+      "details": "Tag, #anon0{}",
+      "id": 401,
+      "name": "NodeScan[S]",
+      "nodeTypeId": 1033
+    },
+    {
+      "columns": "#anon0",
+      "details": "TagClass, #anon0{}",
+      "id": 400,
+      "name": "NodeScan[S]",
+      "nodeTypeId": 1034
+    },
+    {
+      "columns": "#anon0",
+      "details": "University, #anon0{}",
+      "id": 399,
+      "name": "NodeScan[S]",
+      "nodeTypeId": 1027
+    }
+  ],
+  "preamble": "explain"
+}

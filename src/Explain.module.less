@@ -66,11 +66,19 @@
         display: flex;
         align-items: center;
         padding: 0 20px;
-        background-color: #576272;
+        background-color: #64748B;
         border-top-left-radius: 20px;
         border-top-right-radius: 20px;
         font-weight: 400;
         color: #fff;
+        justify-content: space-between;
+
+        .pipelineID {
+          padding: 3px 10px;
+          background-color: #000;
+          color: #fff;
+          border-radius: 10px;
+        }
       }
 
       .body {
@@ -110,18 +118,17 @@
       }
 
       .totalTime {
-        display: flex;
         align-items: center;
-        display: grid;
-        grid-template-columns: 80px 1fr 2fr;
+        overflow: visible !important;
       }
 
       .progress {
+        border-radius: 3px;
         position: relative;
         height: 12px;
         // border-radius: 12px;
         // background-color: #E8E8E8;
-        display: inline-block;
+        display: block;
         overflow: hidden;
 
         >span {
@@ -248,6 +255,7 @@
 
     .detailInfo {
       padding: 0 20px;
+      padding-top: 20px;
       display: grid;
       grid-template-columns: 120px auto;
       align-items: start;
@@ -276,23 +284,33 @@
     position: absolute;
     top: 20px;
     left: 20px;
-    max-height: calc(100% - 40px);
+    max-height: calc(50% - 40px);
     overflow: auto;
 
     &::-webkit-scrollbar {
       display: none;
     }
 
+    .rankTitle {
+      color: #8697B0;
+    }
+
     .rankItem {
       span {
-        width: 10px;
-        height: 10px;
+        padding: 1px;
+        min-width: 15px;
+        min-height: 15px;
         display: inline-block;
         border-radius: 50%;
         margin-right: 5px;
+        border-radius: 50%;
+        color: #fff;
+        text-align: center;
+        font-size: 12px;
       }
 
       padding:5px 10px;
+      padding-left: 0;
       color:#64748B;
       font-size: 14px;
       border-radius: 15px;
@@ -305,4 +323,36 @@
     }
   }
 
+  .pipeline {
+    position: absolute;
+    top: calc(50%);
+    left: 20px;
+    max-height: calc(50% - 40px);
+    overflow: auto;
+
+    &::-webkit-scrollbar {
+      display: none;
+    }
+
+    .rankTitle {
+      color: #8697B0;
+    }
+
+    .rankItem {
+      span {
+        width: 10px;
+        height: 10px;
+        display: inline-block;
+        border-radius: 50%;
+        margin-right: 5px;
+        border-radius: 5px;
+      }
+
+      padding:5px 10px;
+      padding-left: 0;
+      color:#64748B;
+      font-size: 14px;
+      border-radius: 15px;
+    }
+  }
 }

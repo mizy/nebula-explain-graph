@@ -11,47 +11,62 @@ import { AnyMap } from "@vesoft-inc/veditor/types/Utils";
 import { mat2d } from "gl-matrix";
 import { createRoot } from 'react-dom/client';
 import { flushSync } from 'react-dom';
-
-export type ExplainProfile = {
-  rows?: number;
-  execTime?: number;
-  totalTime?: number;
-  rank?: number;
-  [key: string]: any;
-};
+import Color from 'color';
 export const colors = ["#D32F2F", "#FF6F00", "#F2C94C", "#00BFA5"];
-export type ExplainOutput =
-  | {
-      colNames: string[];
-      type: string;
-      name: string;
-    }
-  | string;
-
-export type ExplainOperator = {
-  outputVar?: ExplainOutput;
-  [key: string]: any;
+export const pipelineColors = ["#FA5AD7", "#F2C94C", "#00BFA5", "#FF6F00"];
+export type NodeData = (ExplainNode | OperatorStats) & {
+  preamble: "explain" | "profile";
+  rank: number;
 };
 
 export type ExplainNode = {
+  columns: string;
+  details: string;
+  edgeTypeId: number;
   id: number;
   name: string;
-  profilingData: ExplainProfile;
-  operatorInfo: ExplainOperator;
-  dependencies?: number[];
-  branchInfo?: BranchInfo;
+  children?: number[];
+}; 
+
+export type ExplainData = {
+  preamble?: 'explain'|'profile';
+  buildTimeInUs: number;
+  optimizeTimeInUs: number;
+  header: string[];
+  planNodes?: ExplainNode[];
+  operators?:  ProfileStats;
 };
 
-export type BranchInfo = {
-  conditionNodeId?: number;
-  isDoBranch?: boolean;
-};
+export type ProfileStats = {
+  startTimeMs: number;
+  endTimeMs: number;
+  durationMs: number;
+  pipelines: PipelineStats[]
+}
 
-export type ExplainData = ExplainNode[];
+export type PipelineStats = {
+  blockTimes: number;
+  yieldTimes: number;
+  consumerOperatorId: OperatorUniqueId;
+  operators: OperatorStats[];
+}
+
+export type OperatorStats = {
+  id: OperatorUniqueId; 
+  timeMs?: number;
+  preamble?: 'explain' | 'profile';
+  pipelineId: string;
+  [key: string]: any;//too many fields
+}
+export type OperatorUniqueId = {
+	pipelineId: number
+	operatorId: number
+	planNodeId: number
+	inStorage:  boolean
+}
 
 export type ExplainConfig = {
   data?: ExplainData;
-  type?: "explain" | "profile";
 };
 class ExplainPlugin {
   editor: VEditor;
@@ -59,7 +74,8 @@ class ExplainPlugin {
   data?: VEditorData;
   totalTime = 0;
   totalRows = 0;
-
+  pipelineColorMap: Record<string, string> = {};
+  colorIndex = 0;
   constructor(editor: VEditor, config?: ExplainConfig) {
     this.editor = editor;
     this.config = config || {};
@@ -79,122 +95,153 @@ class ExplainPlugin {
     this.editor.config.dagreOption = {
       rankdir: "BT",
       // ranker: "longest-path",
-      ranksep: 150,
+      ranksep: 300,
+      nodesep:100,
+      align: undefined,
     };
     this.editor.schema.format();
     this.editor.controller.autoScale();
     this.editor.controller.autoFit();
   }
 
+  getPipelineColor() {
+    const color = pipelineColors[this.colorIndex++];
+    if (color) {
+      return color;
+    }
+    const randomColor = "#" + Math.floor(Math.random() * 0xffffff).toString(16).padStart(6, '0');
+    return randomColor;
+  }
+
   convertData(data: ExplainData): VEditorData {
+    switch (data.preamble) {
+      case "explain":
+        return this.convertExplainData(data);
+      case "profile":
+        return this.convertProfileData(data);
+    }
+    throw new Error("invalid explain data");
+  }
+
+  convertExplainData(data: ExplainData): VEditorData {
+    const { planNodes } = data;
+    if (!planNodes) {
+      throw new Error("invalid explain data");
+    }
     const res: VEditorData = {
       nodes: [],
       lines: [],
     };
-    let totalTime = 0;
-    let totalRows = 0;
-    const do_lines: any[] = [];
-    const dag_map: any = {};
-    const dataMap: Record<string, ExplainNode> = {};
-    data.forEach((item) => {
-      dataMap[item.id] = item;
-    });
-    data.forEach((item) => {
+    const planMap = {} as Record<number, ExplainNode>;
+    planNodes.forEach((data) => {
+      planMap[data.id] = data;
       const node: VEditorNode = {
-        uuid: item.id.toString(),
-        name: item.name + "_" + item.id,
+        uuid: data.id.toString(),
+        name: data.name,
         x: 0,
         y: 0,
         type: "explainNode",
         data: {
-          ...item,
+          preamble: "explain",
+          ...data,
         },
       };
-      totalTime += item.profilingData?.totalTime || 0;
-      totalRows += item.profilingData?.rows || 0;
       res.nodes.push(node);
-      item.dependencies?.forEach((id) => {
-        const fromNode = dataMap[id];
+    });
+    planNodes.forEach((data) => {
+      const children = data.children || [];
+      children.forEach((childId) => {
+        const child = planMap[childId];
         const line: VEditorLine = {
-          from: id.toString(),
-          to: item.id.toString(),
+          from: data.id.toString(),
+          to: child.id.toString(),
           fromPoint: 2,
           toPoint: 3,
           type: "explainLine",
-          data: {
-            rows: fromNode?.profilingData?.rows,
-          },
+          data: {},
         };
         res.lines.push(line);
-        dag_map[line.to] = {
-          ...(dag_map[line.to] || {}),
-          [line.from]: true,
-        };
-      });
-      if (item.branchInfo) {
-        if (item.branchInfo.conditionNodeId) {
-          const line: VEditorLine = {
-            to: item.branchInfo.conditionNodeId.toString(),
-            from: item.id.toString(),
-            fromPoint: 1,
-            toPoint: 1,
-            type: "explainLine",
-            data: {
-              isLoop: true,
-            },
-          };
-          res.lines.push(line);
-          dag_map[line.to] = {
-            ...(dag_map[line.to] || {}),
-            [line.from]: true,
-          };
-          if (item.branchInfo.isDoBranch) {
-            do_lines.push({
-              from: item.branchInfo.conditionNodeId.toString(),
-              to: item.id.toString(),
-            });
-          }
-        }
-      }
-    });
-    // add do branch
-    do_lines.forEach((line) => {
-      let now = line.to;
-      while (dag_map[now]) {
-        now = Object.keys(dag_map[now])[0];
-      }
-      res.lines.push({
-        from: line.from,
-        to: now.toString(),
-        fromPoint: 2,
-        toPoint: 3,
-        type: "explainLine",
-        data: {
-          isDo: true,
-          isLoop: true,
-        },
       });
     });
-    // sort by item.profilingData?.totalTime
-    res.nodes.sort((a, b) => {
-      const aTime = (a.data as ExplainNode).profilingData?.totalTime || -1;
-      const bTime = (b.data as ExplainNode).profilingData?.totalTime || -1;
-      return bTime - aTime;
-    });
-    res.nodes.forEach((node, index) => {
-      if (node.data?.profilingData) {
-        (node.data as ExplainNode).profilingData.rank = index;
-      }
-    });
-    this.totalRows = Math.max(totalRows, 100);
-    this.totalTime = totalTime;
 
     return res;
   }
 
+  convertProfileData(data: ExplainData): VEditorData {
+    const { operators } = data;
+    if (!operators) {
+      throw new Error("invalid profile data");
+    }
+    const res: VEditorData = {
+      nodes: [],
+      lines: [],
+    };
+    this.totalRows = 0;
+    this.colorIndex = 0;
+    const operatorMap = {} as Record<string, OperatorStats>;
+    operators.pipelines.forEach((pipeline) => {
+      const consumerOperatorId = pipeline.consumerOperatorId;
+      const consumerId = this.getOperatorId(consumerOperatorId);
+      let prevOperator: OperatorStats | null = null;
+      if (operatorMap[consumerId]) {
+        prevOperator = operatorMap[consumerId];
+      }
+      pipeline.operators?.forEach((operator) => {
+        const id = this.getOperatorId(operator.id); 
+        operator.timeMs = this.parseTimeToMs(operator.time);
+        operator.pipelineId = `${operator.id.inStorage ? "SP" : "P"}${operator.id.pipelineId}`;
+        if (!this.pipelineColorMap[operator.pipelineId]) {
+          this.pipelineColorMap[operator.pipelineId] =this.getPipelineColor();
+        }
+        const node: VEditorNode = {
+          uuid: id,
+          name: operator.name,
+          x: 0,
+          y: 0,
+          type: "explainNode",
+          data: {
+            ...operator,
+            preamble: "profile",
+          },
+        };
+        res.nodes.push(node);
+        if (prevOperator) {
+          const line: VEditorLine = {
+            from: this.getOperatorId(prevOperator.id),
+            to:id ,
+            fromPoint: 2,
+            toPoint: 3,
+            type: "explainLine",
+            data: {
+              rows: operator?.rows,
+            },
+          };
+          this.totalRows = Math.max(operator?.rows, this.totalRows);
+          res.lines.push(line);
+        }
+        if (operatorMap[id]) {
+          throw new Error("duplicate operator id " + id);
+        }
+        prevOperator = operator;
+        operatorMap[id] = operator;
+      })
+    });
+    res.lines = res.lines.sort((a, b) => a.data?.rows as number - (b.data?.rows as number));
+    res.nodes = res.nodes.sort((a, b) => a.data?.timeMs as number - (b.data?.timeMs as number)).map((node, index) => {
+      (node.data as OperatorStats).rank = index;
+      return node;
+    });
+    this.totalTime = operators.durationMs;
+    return res;
+  }
+
+  getOperatorId(id: OperatorUniqueId) {
+    return `${id.pipelineId}-${id.operatorId}-${id.planNodeId}`;
+  }
+
   registerShape() {
-    const shapeWidth = 450;
-    const shapeHeight = this.config.type === "explain" ? 120 : 160;
+    const shapeWidth = 300;
+    const shapeHeight = this.config.data?.preamble === "explain" ? 90 : 180;
     this.editor.graph.node.registeNode(
       "explainNode",
       {
@@ -237,14 +284,14 @@ class ExplainPlugin {
     this.editor.graph.line.registeLine("explainLine", {
       render(line: InstanceLine) {
         const { from, to, data } = line;
-        if (self.config.type !== "explain") {
+        if (self.config.data?.preamble !== "explain") {
           if (data.data?.rows !== undefined) {
             data.label =
               self.renderSplitNum(data.data?.rows as number) + " rows";
           }
           // save the size to data for later compute
           (data.data as AnyMap).width =
-            ((data.data?.rows as number) / self.totalRows) * 100 + 5;
+            ((data.data?.rows as number) / self.totalRows) * 80 + 5;
           const base = (data.data?.width as number) || 10;
           const width = Math.min(base * 2.5, base + 40);
           const height = Math.min(width * 0.8, 30);
@@ -314,38 +361,70 @@ class ExplainPlugin {
     this.initShadowFilter(this.editor);
   }
 
+  getReverseColor(colorString: string) :string {
+    const color = Color(colorString);
+    const luminosity = color.luminosity();
+    if (luminosity > 0.5) {
+      return "#00000080";
+    } else {
+      return "#fff";
+    }
+
+  }
+
   renderNode = (data: VEditorNode) => {
-    const { profilingData, operatorInfo } = data.data as ExplainNode;
-    const progress = ((profilingData?.totalTime||0) / this.totalTime) * 100;
+    const nodeData = data.data as NodeData;
+    const explainData = (nodeData.preamble === "explain" ? nodeData : null) as ExplainNode;
+    const profilingData = (nodeData.preamble === "profile" ? nodeData : null) as OperatorStats;
+    const progress = ((profilingData?.timeMs||0) / this.totalTime) * 100;
     const rank = profilingData?.rank || 0;
     const color = colors[rank] || "#00BFA5";
+    const piplelineColor = this.pipelineColorMap[profilingData?.pipelineId];
     return (
       <div className={styles.explainNode} data-name={data.data?.name}>
         <div className={styles.header}>
           <div className="node-text">{data.name}</div>
+          {profilingData && <div className={styles.pipelineID} style={{
+            backgroundColor: piplelineColor,
+            color: this.getReverseColor(piplelineColor)
+          }}>
+            {profilingData.id.inStorage ? "SP" : "P"}
+            {profilingData.id.pipelineId}
+          </div>}
         </div>
         <ul className={styles.body}>
-          <li>
-            <span className={styles.label}>outputVar:</span>
-            {this.renderOutputVar(operatorInfo?.outputVar)}
-          </li>
-          <li>
-            <span className={styles.label}>inputVar:</span>
-            <span>{operatorInfo?.inputVar}</span>
-          </li>
-          {profilingData && this.config.type === "profile" ? (
+          {explainData&&<li>
+            <span className={styles.label}>info:</span>
+            {this.renderOutputVar(nodeData?.details)}
+          </li>}
+          {profilingData && (
+            <>
+              <li>
+                <span className={styles.label}>info:</span>
+                {this.renderOutputVar(profilingData.planNodeInfo)}
+              </li>
+              <li>
+                <span className={styles.label}>memory:</span>
+                <span>{profilingData?.memory}</span>
+              </li>
+            </>)}
+          {profilingData ? (
+            <>
             <li className={styles.totalTime}>
-              <span className={styles.label}>totalTime:</span>
-              <span>{this.renderSplitNum(profilingData.totalTime)} us</span>
-              <span className={styles.progress}>
+              <span className={styles.label}>time:</span>
+                <span>{profilingData?.time}</span>
+                <div
+                  className={styles.progress}
+                >
                 <span
-                  style={{
-                    width: `${Math.max(progress, 1)}%`,
-                    backgroundColor: `${color}`,
-                  }}
-                ></span>
-              </span>
+                style={{
+                  width: `${Math.max(progress, 1)}%`,
+                  backgroundColor: `${color}`,
+                }}
+                  ></span>
+                  </div>
             </li>
+            </>
           ) : null}
         </ul>
       </div>
@@ -387,6 +466,24 @@ class ExplainPlugin {
       }
     }
     return res.join("");
+  }
+
+  //refer https://github.com/vesoft-inc/nebula-ng/blob/master/src/exec/ExecutionStats.h#L166
+  parseTimeToMs(time: string):number {
+    const units = time.slice(-2);
+    const value = parseFloat(time);
+    switch (units) {
+      case 'ns':
+        return value / 1e6;
+      case 'us':
+        return value / 1e3;
+      case 'ms':
+        return value;
+      case ' s':
+        return value * 1e3;
+      default:
+        throw new Error(`Unknown time unit: ${units}`);
+    }
   }
 
   caches: Record<string, DOMRect> = {};

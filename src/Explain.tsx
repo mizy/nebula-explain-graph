@@ -4,8 +4,8 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import ExplainPlugin, {
   ExplainData,
   ExplainNode,
-  ExplainOperator,
-  colors,
+  NodeData,
+  OperatorStats,
 } from "./Shape";
 import NgqlRender from "./GQL";
 import copySVG from "./assets/copy.svg";
@@ -17,29 +17,15 @@ import copy from "copy-to-clipboard";
 import { Button, message } from "antd";
 import React from "react";
 import { VEditorNode } from "@vesoft-inc/veditor/types/Model/Schema";
-const updatePanAnimation = (editor: VEditor) => {
-  setTimeout(() => {
-    editor.paper.style.transition = "all 0.2s";
-    const { width } = editor.dom.getBoundingClientRect();
-    const bbox = editor.paper.getBBox();
-    const scale = editor.controller.scale;
-    editor.controller.x = (width - bbox.width * scale) / 2 - bbox.x * scale;
-    editor.controller.update();
-    editor.graph.update();
-    setTimeout(() => {
-      editor.paper.style.transition = "";
-    }, 200);
-  }, 201);
-};
+
 export interface ExplainProps {
   style?: React.CSSProperties;
   gql?: string;
   data?: ExplainData;
   detailWidth?: number;
-  type?: "explain" | "profile";
 }
 function Explain(props: ExplainProps) {
-  const { detailWidth = 400, type = "profile" } = props;
+  const { detailWidth = 400 } = props;
   const editorRef = useRef<VEditor>();
   const explainPluginRef = useRef<ExplainPlugin>();
   const domRef = useRef<HTMLDivElement>(null);
@@ -55,17 +41,14 @@ function Explain(props: ExplainProps) {
     });
     editorRef.current = editor;
     explainPluginRef.current = new ExplainPlugin(editor, {
-      type,
       data: props.data,
     });
 
     editor.graph.on("node:click", ({ node }: any) => {
-      !activeRef.current && updatePanAnimation(editor);
       setActiveNode(node.data.data as any);
       activeRef.current = node.data.data as any;
     });
     editor.graph.on("paper:click", () => {
-      activeRef.current && updatePanAnimation(editor);
       setActiveNode(undefined);
       activeRef.current = undefined;
     });
@@ -78,8 +61,8 @@ function Explain(props: ExplainProps) {
     if (props.data && explainPluginRef.current) {
       explainPluginRef.current?.setData(props.data);
       const nodes = explainPluginRef.current?.data?.nodes.sort((a, b) => {
-        const rankA = (a.data as ExplainNode).profilingData.rank || 0;
-        const rankB = (b.data as ExplainNode).profilingData.rank || 0;
+        const rankA = (a.data as OperatorStats).timeMs || 0;
+        const rankB = (b.data as OperatorStats).timeMs || 0;
         return rankA - rankB;
       });
       setLegendNodes(nodes || []);
@@ -92,6 +75,8 @@ function Explain(props: ExplainProps) {
       // ...editor.config.dagreOption,
       rankdir: editor.config.dagreOption?.rankdir === "TB" ? "BT" : "TB",
       ranksep: 150,
+      align:undefined,
+      ranker: "tight-tree",
     };
     const isRevert = editor.config.dagreOption?.rankdir === "TB";
     for (const key in editor.graph.line.lines) {
@@ -220,31 +205,15 @@ function Explain(props: ExplainProps) {
                   setActiveNode(undefined);
                 }} />
             </div>
-            <div className={styles.detailPTitle}>Profiling data</div>
             <div className={styles.detailInfo}>
-              {Object.keys(activeNode?.profilingData || {}).map((key) => {
+              {activeNode&&Object.keys(activeNode).map((key) => {
                 return (
                   <React.Fragment key={key}>
                     <span key={key} title={key} className={styles.detailLabel}>
                       {key}:
                     </span>
                     <pre key={key + "val"} className={styles.detailValue}>
-                      {renderVal(activeNode?.profilingData?.[key])}
-                    </pre>
-                  </React.Fragment>
-                );
-              })}
-            </div>
-            <div className={styles.detailPTitle}>Operator info</div>
-            <div className={styles.detailInfo}>
-              {Object.keys(activeNode?.operatorInfo || {}).map((key) => {
-                return (
-                  <React.Fragment key={key}>
-                    <span key={key} title={key} className={styles.detailLabel}>
-                      {key}:
-                    </span>
-                    <pre key={key + "val"} className={styles.detailValue}>
-                      {renderVal(activeNode?.operatorInfo[key])}
+                      {renderVal((activeNode as any)[key])}
                     </pre>
                   </React.Fragment>
                 );
@@ -253,11 +222,12 @@ function Explain(props: ExplainProps) {
           </div>
         </div>
         <div className={styles.rankArea}>
+          <div className={styles.rankTitle}>TotalTime</div>
           {legendNodes?.map((item) => {
-            const node = item.data as ExplainNode;
+            const node = item.data as NodeData;
             return (
               <div
-                key={node.id}
+                key={item.uuid}
                 onClick={() => {
                   focusNode(item);
                 }}
@@ -266,99 +236,36 @@ function Explain(props: ExplainProps) {
                   `${activeNode?.id === node.id ? ` ${styles.active}` : ""}`
                 }
               >
-                <span
-                  style={{
-                    background:
-                      colors[node.profilingData.rank || 0] ||
-                      colors[colors.length - 1],
-                  }}
-                ></span>
+                {node.rank!==undefined &&
+                  <span
+                    style={{
+                      background: "#00BFA5"
+                    }}
+                  >{node.rank + 1}</span>}
                 {node.name}
               </div>
             );
           })}
         </div>
-      </div>
+        {Object.keys(explainPluginRef.current?.pipelineColorMap||{}).length > 0 && (
+          <div className={styles.pipeline}>
+            <div className={styles.rankTitle}>Pipeline:</div>
+            {Object.keys(explainPluginRef.current?.pipelineColorMap || {}).map((key) => {
+              const color = explainPluginRef.current?.pipelineColorMap[key];
+              return (
+                <div
+                  key={key}
+                  className={styles.rankItem}
+                >
+                  <span style={{ background: color }}></span>
+                  {key}
+                </div>
+              );
+            })}
+          </div>)}
+        </div>
     </div>
   );
 }
-
-function convertExplainData(data: {
-  id: number;
-  name: string;
-  "operator info": string;
-  "profiling data": string;
-  dependencies: string;
-}): ExplainNode {
-  const operatorInfo = formatExplainData(data["operator info"]);
-  const profilingData = safeParse(data["profiling data"]);
-  if (typeof profilingData === "object"&&profilingData.totalTime) {
-      profilingData.totalTime = Number(
-        profilingData.totalTime?.replace("(us)", "") || 0
-      );
-      profilingData.execTime = Number(profilingData.execTime.replace("(us)", ""));
-  }
-  return {
-    id: data.id,
-    name: data.name,
-    dependencies: data.dependencies
-      ? data.dependencies.split(",").map((each) => Number(each))
-      : [],
-    profilingData,
-    operatorInfo,
-  };
-}
-
-function formatExplainData(data: string): ExplainOperator {
-  const regex = /(\w+): ([\s\S]*?)(?=\n\w+:|$)/g;
-  let match;
-  const result: {
-    [key: string]: string;
-  } = {};
-
-  while ((match = regex.exec(data)) !== null) {
-    result[match[1]] = match[2].trim();
-  }
-  return result;
-}
-
-function safeParse(str: string) {
-  try {
-    return JSON.parse(str);
-  } catch (e) {
-    return str;
-  }
-}
-
-const convertedDashboardData = (data: any[]): ExplainNode[] => {
-  return data.map((each) => {
-    const profile = each.profiles?.[0] as any;
-    if (profile) {
-      if (profile.totalDurationInUs) {
-        profile.totalTime = profile.totalDurationInUs;
-      }
-      if (profile.execDurationInUs) {
-        profile.execTime = profile.execDurationInUs;
-      }
-    }
-
-    return {
-      id: each.id,
-      name: each.name,
-      dependencies: each.dependencies,
-      profilingData: profile,
-      branchInfo: each.branchInfo,
-      operatorInfo: {
-        outputVar: each.outputVar,
-        ...(each.description?.reduce((acc: any, cur: any) => {
-          return {
-            ...acc,
-            ...cur,
-          };
-        }, {}) as any),
-      },
-    };
-  });
-};
+ 
 export default Explain;
-export { convertExplainData, formatExplainData, convertedDashboardData };

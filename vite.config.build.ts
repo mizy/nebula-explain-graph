@@ -4,6 +4,9 @@ import react from '@vitejs/plugin-react'
 
 // https://vitejs.dev/config/
 export default defineConfig({
+  server: {
+    host:'0.0.0.0'
+  },
   build: {
     lib: {
       // Could also be a dictionary or array of multiple entry points
