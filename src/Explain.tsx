@@ -5,7 +5,6 @@ import ExplainPlugin, {
   ExplainData,
   ExplainNode,
   NodeData,
-  OperatorStats,
 } from "./Shape";
 import NgqlRender from "./GQL";
 import copySVG from "./assets/copy.svg";
